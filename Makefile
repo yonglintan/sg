@@ -1,22 +1,25 @@
 CC = gcc
 CFLAGS = -Wall -Wextra -std=c99 -I./
 SRCS = $(wildcard src/*.c)
-OBJS = $(SRCS:.c=.o)
-TARGET = sg
+OBJS = $(patsubst src/%.c,build/%.o,$(SRCS))
+TARGET = build/sg
 
 all: $(TARGET)
 
-$(TARGET): $(OBJS)
+$(TARGET): $(OBJS) | build
 	$(CC) $(CFLAGS) -o $@ $(OBJS)
 
-%.o: %.c
+build/%.o: src/%.c | build
 	$(CC) $(CFLAGS) -c $< -o $@
 
+build:
+	mkdir -p build
+
 clean:
-	rm -f $(OBJS) $(TARGET)
+	rm -rf build
 
 repl: $(TARGET)
-	./$(TARGET)
+	$(TARGET)
 
 test: $(TARGET)
 	./test_sg.sh

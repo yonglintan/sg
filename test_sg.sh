@@ -1,5 +1,4 @@
-#!/bin/bash
-# Comprehensive test script for the SG language interpreter
+# test suite for now, we are using the REPL
 
 # Color codes for better readability
 GREEN='\033[0;32m'
@@ -27,7 +26,7 @@ run_test_case() {
     local output_file=$(mktemp)
     
     # Run the test
-    echo -e "$input" | ./sg > "$output_file" 2>&1
+    echo -e "$input" | ./build/sg > "$output_file" 2>&1
     
     # Read the content of the output file
     local output=$(<"$output_file")
