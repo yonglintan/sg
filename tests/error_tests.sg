@@ -1,0 +1,23 @@
+// This file contains syntax errors to test error handling
+
+// Unterminated string
+var bad_string = "This string has no closing quote;
+
+// Invalid character
+var @invalid_name = 123;
+
+// Correctly written code (for comparison)
+var good_variable = 42;
+
+// Another error: unterminated string with newline
+var multiline = "This string 
+spans multiple lines";
+
+// Invalid character sequence
+var $$$money = 100;
+
+// Test 1: Invalid character
+var @invalid = 100;
+
+// Test 2: Valid code
+var valid = 200; 

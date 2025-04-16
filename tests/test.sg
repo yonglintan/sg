@@ -1,0 +1,36 @@
+
+// With some comments
+
+var a = 123;
+var b = 456.789;
+var c = "Hello, world!";
+
+if (a < b) {
+  print "b is bigger than a";
+} else {
+  print "a is bigger than or equal to b";
+}
+
+// Testing all operators
+var test = !false;
+test = (1 + 2) * 3 - 4 / 5;
+test = 10 <= 20 and 20 >= 10;
+test = "concatenate" + " " + "strings";
+
+// Testing keywords
+class TestClass {
+  fun test() {
+    var local = nil;
+    for (var i = 0; i < 10; i = i + 1) {
+      if (i == 5) return i;
+      while (false) nil;
+    }
+    this.field = local;
+    super.method();
+  }
+}
+
+// Testing identifiers
+var camelCase = 1;
+var snake_case = 2;
+var _startWithUnderscore = 3; 
