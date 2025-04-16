@@ -1,5 +1,0 @@
-// Test file for unterminated strings in SG language
-
-var complete = "This string is properly terminated";
-
-var incomplete = "This string is not terminated 
