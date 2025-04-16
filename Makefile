@@ -15,6 +15,9 @@ $(TARGET): $(OBJS)
 clean:
 	rm -f $(OBJS) $(TARGET)
 
+repl: $(TARGET)
+	./$(TARGET)
+
 test: $(TARGET)
 	./$(TARGET) tests/test.sg
 
@@ -25,3 +28,5 @@ test-strings: $(TARGET)
 	-./$(TARGET) tests/unterminated_string.sg
 
 test-all: test test-errors test-strings
+
+.PHONY: all clean test test-errors test-strings test-all repl
