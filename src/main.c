@@ -1,7 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 #include "scanner.h"
+#include "expr.h"
 
 // Global error flag
 static bool hadError = false;

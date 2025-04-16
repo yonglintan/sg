@@ -1,6 +1,6 @@
 CC = gcc
 CFLAGS = -Wall -Wextra -std=c99 -I./
-SRCS = src/main.c src/scanner.c
+SRCS = src/main.c src/scanner.c src/expr.c
 OBJS = $(SRCS:.c=.o)
 TARGET = sg
 
