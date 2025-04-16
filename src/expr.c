@@ -4,95 +4,85 @@
 #include <stdarg.h>
 #include "expr.h"
 
-Expr* newBinary(Expr* left, Token operator, Expr* right) {
-    Binary* expr = (Binary*)malloc(sizeof(Binary));
-    expr->base.type = EXPR_BINARY;
-    expr->left = left;
-    expr->operator = operator;
-    expr->right = right;
-    return (Expr*)expr;
+Expr* newBinaryExpr(Expr* left, Token operator, Expr* right) {
+    Expr* expr = (Expr*)malloc(sizeof(Expr));
+    expr->type = EXPR_BINARY;
+    expr->as.binary.left = left;
+    expr->as.binary.operator = operator;
+    expr->as.binary.right = right;
+    return expr;
 }
 
-Expr* newGrouping(Expr* expression) {
-    Grouping* expr = (Grouping*)malloc(sizeof(Grouping));
-    expr->base.type = EXPR_GROUPING;
-    expr->expression = expression;
-    return (Expr*)expr;
+Expr* newGroupingExpr(Expr* expression) {
+    Expr* expr = (Expr*)malloc(sizeof(Expr));
+    expr->type = EXPR_GROUPING;
+    expr->as.grouping.expression = expression;
+    return expr;
 }
 
-Expr* newLiteralNumber(double value) {
-    Literal* expr = (Literal*)malloc(sizeof(Literal));
-    expr->base.type = EXPR_LITERAL;
-    expr->literalType = LITERAL_NUMBER;
-    expr->value.number = value;
-    return (Expr*)expr;
+Expr* newLiteralNumberExpr(double value) {
+    Expr* expr = (Expr*)malloc(sizeof(Expr));
+    expr->type = EXPR_LITERAL;
+    expr->as.literal.type = TOKEN_NUMBER;
+    expr->as.literal.value.number = value;
+    return expr;
 }
 
-Expr* newLiteralString(const char* value) {
-    Literal* expr = (Literal*)malloc(sizeof(Literal));
-    expr->base.type = EXPR_LITERAL;
-    expr->literalType = LITERAL_STRING;
-    expr->value.string = strdup(value);
-    return (Expr*)expr;
+Expr* newLiteralBooleanExpr(bool value) {
+    Expr* expr = (Expr*)malloc(sizeof(Expr));
+    expr->type = EXPR_LITERAL;
+    expr->as.literal.type = value ? TOKEN_TRUE : TOKEN_FALSE;
+    expr->as.literal.value.boolean = value;
+    return expr;
 }
 
-Expr* newLiteralBool(bool value) {
-    Literal* expr = (Literal*)malloc(sizeof(Literal));
-    expr->base.type = EXPR_LITERAL;
-    expr->literalType = LITERAL_BOOL;
-    expr->value.boolean = value;
-    return (Expr*)expr;
+Expr* newLiteralStringExpr(char* value) {
+    Expr* expr = (Expr*)malloc(sizeof(Expr));
+    expr->type = EXPR_LITERAL;
+    expr->as.literal.type = TOKEN_STRING;
+    expr->as.literal.value.string = strdup(value);
+    return expr;
 }
 
-Expr* newLiteralNil() {
-    Literal* expr = (Literal*)malloc(sizeof(Literal));
-    expr->base.type = EXPR_LITERAL;
-    expr->literalType = LITERAL_NIL;
-    return (Expr*)expr;
+Expr* newLiteralNilExpr() {
+    Expr* expr = (Expr*)malloc(sizeof(Expr));
+    expr->type = EXPR_LITERAL;
+    expr->as.literal.type = TOKEN_NIL;
+    return expr;
 }
 
-Expr* newUnary(Token operator, Expr* right) {
-    Unary* expr = (Unary*)malloc(sizeof(Unary));
-    expr->base.type = EXPR_UNARY;
-    expr->operator = operator;
-    expr->right = right;
-    return (Expr*)expr;
+Expr* newUnaryExpr(Token operator, Expr* right) {
+    Expr* expr = (Expr*)malloc(sizeof(Expr));
+    expr->type = EXPR_UNARY;
+    expr->as.unary.operator = operator;
+    expr->as.unary.right = right;
+    return expr;
 }
 
-// Free function
 void freeExpr(Expr* expr) {
     if (expr == NULL) return;
     
     switch (expr->type) {
-        case EXPR_BINARY: {
-            Binary* binary = (Binary*)expr;
-            freeExpr(binary->left);
-            freeExpr(binary->right);
+        case EXPR_BINARY:
+            freeExpr(expr->as.binary.left);
+            freeExpr(expr->as.binary.right);
             break;
-        }
-        case EXPR_GROUPING: {
-            Grouping* grouping = (Grouping*)expr;
-            freeExpr(grouping->expression);
+        case EXPR_GROUPING:
+            freeExpr(expr->as.grouping.expression);
             break;
-        }
-        case EXPR_LITERAL: {
-            Literal* literal = (Literal*)expr;
-            if (literal->literalType == LITERAL_STRING) {
-                free(literal->value.string);
+        case EXPR_LITERAL:
+            if (expr->as.literal.type == TOKEN_STRING) {
+                free(expr->as.literal.value.string);
             }
             break;
-        }
-        case EXPR_UNARY: {
-            Unary* unary = (Unary*)expr;
-            freeExpr(unary->right);
+        case EXPR_UNARY:
+            freeExpr(expr->as.unary.right);
             break;
-        }
     }
     
     free(expr);
 }
 
-// Helper function to manage the string buffer for printing
 typedef struct {
     char* buffer;
     int capacity;
@@ -111,7 +101,7 @@ StringBuilder* newStringBuilder() {
 void appendString(StringBuilder* sb, const char* str) {
     int len = strlen(str);
     
-    // Make sure we have enough space
+    // make sure we have enough space
     if (sb->capacity < sb->length + len + 1) {
         int newCapacity = (sb->capacity == 0) ? 64 : sb->capacity * 2;
         while (newCapacity < sb->length + len + 1) {
@@ -122,7 +112,7 @@ void appendString(StringBuilder* sb, const char* str) {
         sb->capacity = newCapacity;
     }
     
-    // Append the string
+    // once done, append the string
     strcpy(sb->buffer + sb->length, str);
     sb->length += len;
 }
@@ -132,10 +122,10 @@ void freeStringBuilder(StringBuilder* sb) {
     free(sb);
 }
 
-// Forward declaration of helper function
+
 void printExprInternal(StringBuilder* sb, Expr* expr);
 
-// Helper for parenthesizing expressions
+
 void parenthesize(StringBuilder* sb, const char* name, int count, ...) {
     va_list args;
     
@@ -153,58 +143,58 @@ void parenthesize(StringBuilder* sb, const char* name, int count, ...) {
     appendString(sb, ")");
 }
 
-// The main internal printing function
+
 void printExprInternal(StringBuilder* sb, Expr* expr) {
     switch (expr->type) {
         case EXPR_BINARY: {
-            Binary* binary = (Binary*)expr;
             char op[2] = {0};
-            op[0] = *binary->operator.start;
-            parenthesize(sb, op, 2, binary->left, binary->right);
+            op[0] = *expr->as.binary.operator.start;
+            parenthesize(sb, op, 2, expr->as.binary.left, expr->as.binary.right);
             break;
         }
         case EXPR_GROUPING: {
-            Grouping* grouping = (Grouping*)expr;
-            parenthesize(sb, "group", 1, grouping->expression);
+            parenthesize(sb, "group", 1, expr->as.grouping.expression);
             break;
         }
         case EXPR_LITERAL: {
-            Literal* literal = (Literal*)expr;
-            switch (literal->literalType) {
-                case LITERAL_NIL:
+            switch (expr->as.literal.type) {
+                case TOKEN_NIL:
                     appendString(sb, "nil");
                     break;
-                case LITERAL_BOOL:
-                    appendString(sb, literal->value.boolean ? "true" : "false");
+                case TOKEN_TRUE:
+                case TOKEN_FALSE:
+                    appendString(sb, expr->as.literal.value.boolean ? "true" : "false");
                     break;
-                case LITERAL_NUMBER: {
+                case TOKEN_NUMBER: {
                     char buffer[32];
-                    snprintf(buffer, sizeof(buffer), "%g", literal->value.number);
+                    snprintf(buffer, sizeof(buffer), "%g", expr->as.literal.value.number);
                     appendString(sb, buffer);
                     break;
                 }
-                case LITERAL_STRING:
-                    appendString(sb, literal->value.string);
+                case TOKEN_STRING:
+                    appendString(sb, expr->as.literal.value.string);
+                    break;
+                default:
+                    appendString(sb, "unknown literal");
                     break;
             }
             break;
         }
         case EXPR_UNARY: {
-            Unary* unary = (Unary*)expr;
+            
             char op[2] = {0};
-            op[0] = *unary->operator.start;
-            parenthesize(sb, op, 1, unary->right);
+            op[0] = *expr->as.unary.operator.start;
+            parenthesize(sb, op, 1, expr->as.unary.right);
             break;
         }
     }
 }
 
-
 char* printExpr(Expr* expr) {
     StringBuilder* sb = newStringBuilder();
     printExprInternal(sb, expr);
-    
-    // We need to return a copy that will outlive the StringBuilder
+
+    // return a version that will outlive the stringbuilder
     char* result = strdup(sb->buffer);
     freeStringBuilder(sb);
     

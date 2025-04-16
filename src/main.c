@@ -4,11 +4,12 @@
 #include <stdbool.h>
 #include "scanner.h"
 #include "expr.h"
+#include "parser.h"
+#include "interpreter.h"
 
-// Global error flag
 static bool hadError = false;
+static bool hasRuntimeError = false;
 
-// Error reporting functions
 static void report(int line, const char* where, const char* message) {
     fprintf(stderr, "[line %d] Error%s: %s\n", line, where, message);
     hadError = true;
@@ -23,6 +24,7 @@ static void runFile(const char* path);
 static void runPrompt(void);
 
 int main(int argc, char* argv[]) {
+    // we support 2 modes now, file and repl
     if (argc > 2) {
         printf("Usage: sg [script]\n");
         exit(64);
@@ -65,8 +67,8 @@ static void runFile(const char* path) {
     free(buffer);
     fclose(file);
     
-    // Exit with error code if there was an error
     if (hadError) exit(65);
+    if (hasRuntimeError) exit(70);
 }
 
 static void runPrompt(void) {
@@ -78,8 +80,14 @@ static void runPrompt(void) {
             printf("\n");
             break;
         }
+
+        // also allow for exit() 
+        if (strcmp(line, "exit()\n") == 0) {
+            printf("Exiting...\n");
+            break;
+        }
         
-        // Remove newline character if present
+        // remove newline
         size_t len = strlen(line);
         if (len > 0 && line[len - 1] == '\n') {
             line[len - 1] = '\0';
@@ -87,8 +95,10 @@ static void runPrompt(void) {
         
         run(line);
         
-        // Reset error flag in REPL mode
+        // reset flags
         hadError = false;
+        hasRuntimeError = false;
+        resetRuntimeError();
     }
 }
 
@@ -99,20 +109,29 @@ static void run(const char* source) {
     int tokenCount = 0;
     Token* tokens = scanTokens(&scanner, &tokenCount);
 
-    // Print tokens and handle errors
-    for (int i = 0; i < tokenCount; i++) {
-        Token token = tokens[i];
-        
-        // Handle error tokens
-        if (token.type == TOKEN_ERROR) {
-            error(token.line, token.start);
-            // Don't print error tokens
-        } else {
-            // Only print non-error tokens
-            printToken(token);
-        }
+    Parser parser;
+    initParser(&parser, tokens, tokenCount);
+    Expr* expression = parse(&parser);
+    
+    // if there was a scanning or parsing error, stop here
+    if (hadError || hadParserError(&parser) || expression == NULL) {
+        freeTokens(tokens, tokenCount);
+        return;
     }
     
-    // Free tokens and allocated error messages
+    // interpret the expression
+    Expr* result = interpret(expression);
+    
+    hasRuntimeError = hadRuntimeError();
+    
+    // if no error we can print a result
+    if (!hasRuntimeError && result != NULL) {
+        char* value = printExpr(result);
+        printf("%s\n", value);
+        free(value);
+        freeExpr(result);
+    }
+    
+    freeExpr(expression);
     freeTokens(tokens, tokenCount);
 }

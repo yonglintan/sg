@@ -1,9 +1,6 @@
 #ifndef expr_h
 #define expr_h
 
-#include <stdlib.h>
-#include <string.h>
-#include <stdbool.h>
 #include "scanner.h"
 
 typedef enum {
@@ -14,64 +11,54 @@ typedef enum {
 } ExprType;
 
 typedef struct Expr Expr;
-typedef struct Binary Binary;
-typedef struct Grouping Grouping;
-typedef struct Literal Literal;
-typedef struct Unary Unary;
 
-typedef enum {
-    LITERAL_NUMBER,
-    LITERAL_STRING,
-    LITERAL_BOOL,
-    LITERAL_NIL
-} LiteralType;
-
-typedef union {
-    double number;
-    char* string;
-    bool boolean;
-} LiteralValue;
-
-struct Expr {
-    ExprType type;
-};
-
-// (e.g., a + b)
-struct Binary {
-    Expr base;
+typedef struct {
     Expr* left;
     Token operator;
     Expr* right;
-};
+} BinaryExpr;
 
-struct Grouping {
-    Expr base;
+typedef struct {
     Expr* expression;
-};
+} GroupingExpr;
 
-struct Literal {
-    Expr base;
-    LiteralType literalType;
-    LiteralValue value;
-};
+typedef struct {
+    TokenType type;
+    union {
+        double number;
+        bool boolean;
+        char* string;
+    } value;
+} LiteralExpr;
 
-struct Unary {
-    Expr base;
+typedef struct {
     Token operator;
     Expr* right;
+} UnaryExpr;
+
+struct Expr {
+    ExprType type;
+    union {
+        BinaryExpr binary;
+        GroupingExpr grouping;
+        LiteralExpr literal;
+        UnaryExpr unary;
+    } as;
 };
 
-Expr* newBinary(Expr* left, Token operator, Expr* right);
-Expr* newGrouping(Expr* expression);
-Expr* newLiteralNumber(double value);
-Expr* newLiteralString(const char* value);
-Expr* newLiteralBool(bool value);
-Expr* newLiteralNil();
-Expr* newUnary(Token operator, Expr* right);
+// we can probably refactor this later?
+Expr* newBinaryExpr(Expr* left, Token operator, Expr* right);
+Expr* newGroupingExpr(Expr* expression);
+Expr* newLiteralNumberExpr(double value);
+Expr* newLiteralBooleanExpr(bool value);
+Expr* newLiteralStringExpr(char* value);
+Expr* newLiteralNilExpr();
+Expr* newUnaryExpr(Token operator, Expr* right);
+
 
 void freeExpr(Expr* expr);
 
-// AST Printer, to delete later, for debugging 
+// print an expression (for debugging)
 char* printExpr(Expr* expr);
 
 #endif 
