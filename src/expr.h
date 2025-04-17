@@ -2,63 +2,92 @@
 #define expr_h
 
 #include "scanner.h"
+#include <stdbool.h> // Include for bool type used in LiteralExpr
 
 typedef enum {
+    EXPR_ASSIGN,   // New: Assignment like x = 1
     EXPR_BINARY,
     EXPR_GROUPING,
     EXPR_LITERAL,
-    EXPR_UNARY
+    EXPR_UNARY,
+    EXPR_VARIABLE // New: Variable access like x
 } ExprType;
 
+// Forward declaration needed for nested expressions
 typedef struct Expr Expr;
 
+// --- Expression Struct Definitions ---
+
+// Assignment: identifier = value
+typedef struct {
+    Token name; // The variable token (identifier)
+    Expr* value; // The expression being assigned
+} AssignExpr;
+
+// Binary: left op right
 typedef struct {
     Expr* left;
     Token operator;
     Expr* right;
 } BinaryExpr;
 
+// Grouping: ( expression )
 typedef struct {
     Expr* expression;
 } GroupingExpr;
 
+// Literal: number, string, true, false, nil
 typedef struct {
-    TokenType type;
+    // Store the literal value directly in the expression node
+    // We can use the TokenType to know which field of the union is valid
+    TokenType type; // TOKEN_NUMBER, TOKEN_STRING, TOKEN_TRUE, etc.
     union {
         double number;
         bool boolean;
-        char* string;
+        char* string; // NOTE: Strings would typically be heap objects (later)
     } value;
 } LiteralExpr;
 
+// Unary: op right
 typedef struct {
     Token operator;
     Expr* right;
 } UnaryExpr;
 
+// Variable: identifier
+typedef struct {
+    Token name; // The variable token (identifier)
+} VariableExpr;
+
+// --- Main Expression Struct (using a tagged union) ---
 struct Expr {
     ExprType type;
     union {
+        AssignExpr assign;     // New
         BinaryExpr binary;
         GroupingExpr grouping;
         LiteralExpr literal;
         UnaryExpr unary;
+        VariableExpr variable; // New
     } as;
 };
 
-// we can probably refactor this later?
+// --- Constructor Functions ---
+Expr* newAssignExpr(Token name, Expr* value);
 Expr* newBinaryExpr(Expr* left, Token operator, Expr* right);
 Expr* newGroupingExpr(Expr* expression);
 Expr* newLiteralNumberExpr(double value);
 Expr* newLiteralBooleanExpr(bool value);
-Expr* newLiteralStringExpr(char* value);
+Expr* newLiteralStringExpr(char* value); // Assumes value is already managed/copied if needed
 Expr* newLiteralNilExpr();
 Expr* newUnaryExpr(Token operator, Expr* right);
+Expr* newVariableExpr(Token name);
 
-
+// --- Memory Management ---
 void freeExpr(Expr* expr);
 
-// print an expression (for debugging)
+// --- Debugging ---
+// (Optional but helpful) Function to print AST representation
 char* printExpr(Expr* expr);
 
 #endif 

@@ -8,6 +8,7 @@
 #include "stmt.h"
 
 static Expr* expression(Parser* parser);
+static Expr* assignment(Parser* parser);
 static Expr* equality(Parser* parser);
 static Expr* comparison(Parser* parser);
 static Expr* term(Parser* parser);
@@ -291,6 +292,7 @@ static StmtList* block(Parser* parser) {
     }
 
     Token closingBrace = consume(parser, TOKEN_RIGHT_BRACE, "Expect '}' after block.");
+    // (void)closingBrace;
 
     // If we exited the loop due to an error OR failed to consume '}', cleanup & return NULL
     if (parser->hadError) { // Check error flag *after* trying to consume brace
@@ -307,10 +309,41 @@ static StmtList* block(Parser* parser) {
 
 // --- Expression Parsing Rules ---
 
-// expression -> equality ; (Temporarily simplified)
+// expression -> assignment ;
 static Expr* expression(Parser* parser) {
-    // return assignment(parser); // Defer until Checkpoint 4
-    return equality(parser);
+    return assignment(parser); // Use assignment as the top-level expression rule
+}
+
+// assignment -> IDENTIFIER "=" assignment | equality ;
+// eg: a = b = c;
+static Expr* assignment(Parser* parser) {
+    // Parse the LHS. It might be an identifier, or something else.
+    Expr* expr = equality(parser);
+    if (parser->hadError) return NULL;
+
+    if (match(parser, TOKEN_EQUAL)) {
+        Token equals = previous(parser);
+        Expr* value = assignment(parser); // Parse the RHS recursively
+        if (parser->hadError) {
+            freeExpr(expr); // Free the LHS if RHS parsing failed
+            return NULL;
+        }
+
+        if (expr->type == EXPR_VARIABLE) {
+            Token name = expr->as.variable.name;
+             Expr* assignNode = newAssignExpr(name, value);
+             return assignNode;
+
+        } else {
+            error(parser, equals, "Invalid assignment target.");
+            freeExpr(value);
+            freeExpr(expr);
+            return NULL;
+        }
+    }
+
+    // If no '=' was matched, just return the expression parsed by equality()
+    return expr;
 }
 
 // equality -> comparison ( ( "!=" | "==" ) comparison )* ;
@@ -381,23 +414,20 @@ static Expr* unary(Parser* parser) {
     return primary(parser);
 }
 
-// primary -> NUMBER | STRING | "true" | "false" | "nil" | "(" expression ")" ;
+// primary -> NUMBER | STRING | "true" | "false" | "nil" | IDENTIFIER | "(" expression ")" ;
 static Expr* primary(Parser* parser) {
     if (match(parser, TOKEN_FALSE)) return newLiteralBooleanExpr(false);
     if (match(parser, TOKEN_TRUE)) return newLiteralBooleanExpr(true);
     if (match(parser, TOKEN_NIL)) return newLiteralNilExpr();
 
     if (match(parser, TOKEN_NUMBER)) {
-        // The literal value is stored in the *previous* token
         double value = strtod(previous(parser).start, NULL);
         return newLiteralNumberExpr(value);
     }
 
     if (match(parser, TOKEN_STRING)) {
-        // Extract string value without quotes from the *previous* token
         const char* strStart = previous(parser).start + 1;
         int length = previous(parser).length - 2;
-        // Need to copy the string, as the original source might be freed
         char* value = (char*)malloc(length + 1);
         if (value == NULL) {
             error(parser, previous(parser), "Memory error copying string literal.");
@@ -406,11 +436,14 @@ static Expr* primary(Parser* parser) {
         strncpy(value, strStart, length);
         value[length] = '\0';
         Expr* literal = newLiteralStringExpr(value);
-        free(value); // newLiteralStringExpr should make its own copy if needed
+        free(value); 
         return literal;
     }
 
-    // TODO: add identifier parsing
+     if (match(parser, TOKEN_IDENTIFIER)) {
+        // Create a variable expression node using the identifier token
+        return newVariableExpr(previous(parser));
+    }
 
     if (match(parser, TOKEN_LEFT_PAREN)) {
         Expr* expr = expression(parser);

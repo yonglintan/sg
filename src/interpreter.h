@@ -1,21 +1,36 @@
-#ifndef interpreter_h
-#define interpreter_h
+#ifndef sg_interpreter_h
+#define sg_interpreter_h
 
 #include "expr.h"
+#include "stmt.h"
+#include "object.h"
+#include "scanner.h"
+#include <stdbool.h>
 
-// Runtime error structure
-typedef struct {
-    const char* message;
-    Token token;
-} RuntimeError;
+// Structure to hold runtime error info (optional but good practice)
+// typedef struct {
+//     Token token; // Token near the error
+//     const char* message;
+// } RuntimeErrorInfo;
 
-// Interpret an expression and return the result
-Expr* interpret(Expr* expression);
+// Initialize the interpreter (creates global environment)
+void initInterpreter();
 
-// Check if there was a runtime error
-bool hadRuntimeError(void);
+// Free interpreter resources (frees global environment)
+void freeInterpreter();
 
-// Reset the runtime error flag
-void resetRuntimeError(void);
+// Interpret a list of statements
+// Returns true on success, false if a runtime error occurred.
+void interpretStatements(StmtList* statements);
+
+// Function to report a runtime error
+// Uses varargs for formatting like printf
+void runtimeError(Token* token, const char* format, ...);
+
+// Check if a runtime error has occurred during interpretation
+bool hadRuntimeError();
+
+// Reset the runtime error flag (e.g., for REPL use)
+void resetRuntimeError();
 
 #endif 
