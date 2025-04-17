@@ -1,0 +1,77 @@
+// --- Arithmetic and Precedence ---
+print "--- Arithmetic ---";
+print 1 + 2;       // Expected: 3
+print 5 - 8;       // Expected: -3
+print 3 * 4;       // Expected: 12
+print 10 / 2;      // Expected: 5
+print 1 + 2 * 3;   // Expected: 7
+print (1 + 2) * 3; // Expected: 9
+
+// --- Unary Operators ---
+print "--- Unary ---";
+var u1 = 10;
+print -u1;         // Expected: -10
+print !true;       // Expected: false
+print !false;      // Expected: true
+print !!nil;       // Expected: false (nil is falsey)
+print !!0;         // Expected: true (numbers are truthy)
+print !!"";        // Expected: true (strings are truthy, though printing "" might show error)
+
+// --- Comparisons ---
+print "--- Comparisons ---";
+print 5 > 3;       // Expected: true
+print 5 < 3;       // Expected: false
+print 5 >= 5;      // Expected: true
+print 5 <= 4;      // Expected: false
+
+// --- Equality ---
+print "--- Equality ---";
+print 1 == 1;      // Expected: true
+print 1 != 2;      // Expected: true
+print nil == nil;    // Expected: true
+print true == true;  // Expected: true
+print false == false;// Expected: true
+print true == false; // Expected: false
+print 1 == true;   // Expected: false (different types)
+print nil == false;  // Expected: false
+print "hello" == "hello"; // Expected: true (string equality test)
+print "hello" == "world"; // Expected: false
+print "" == "";         // Expected: true
+
+// --- Variables and Assignment ---
+print "--- Variables ---";
+var a;
+print a;           // Expected: nil
+a = 1;
+print a;           // Expected: 1
+var b = 2;
+print a + b;       // Expected: 3
+b = a = 99;        // Chained assignment
+print a;           // Expected: 99
+print b;           // Expected: 99
+
+// --- Block Scope ---
+print "--- Scopes ---";
+var global = "outside";
+{
+  var local = "inside";
+  print local;
+  print global;
+  global = "changed inside";
+}
+print global;
+
+var shadow = 1;
+{
+  print shadow;   // Expected: 1
+  var shadow = 2;
+  print shadow;   // Expected: 2
+  {
+    shadow = 3; // Assign to middle scope's shadow
+    print shadow; // Expected: 3
+  }
+  print shadow;   // Expected: 3 (middle scope)
+}
+print shadow;     // Expected: 1 (global scope)
+
+print "--- Basic Tests Complete ---"; 
