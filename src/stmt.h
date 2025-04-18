@@ -6,11 +6,11 @@
 
 typedef enum {
     STMT_EXPRESSION,
+    STMT_IF,
     STMT_PRINT,
     STMT_VAR,
     STMT_BLOCK
 } StmtType;
-
 
 typedef struct Stmt Stmt;
 typedef struct StmtList StmtList;
@@ -24,6 +24,12 @@ struct StmtList {
 typedef struct {
     Expr* expression;
 } ExpressionStmt;
+
+typedef struct {
+    Expr* condition;
+    Stmt* thenBranch;
+    Stmt* elseBranch;
+} IfStmt;
 
 typedef struct {
     Expr* expression;
@@ -45,11 +51,13 @@ struct Stmt {
         PrintStmt print;
         VarStmt var;
         BlockStmt block;
+        IfStmt ifStmt;
     } as;
 };
 
 // create new statements
 Stmt* newExpressionStmt(Expr* expression);
+Stmt* newIfStmt(Expr* condition, Stmt* thenBranch, Stmt* elseBranch);
 Stmt* newPrintStmt(Expr* expression);
 Stmt* newVarStmt(Token name, Expr* initializer);
 Stmt* newBlockStmt(StmtList* statements);
@@ -61,4 +69,4 @@ StmtList* newStmtList(Stmt* stmt, StmtList* next);
 void freeStmt(Stmt* stmt);
 void freeStmtList(StmtList* list);
 
-#endif 
+#endif

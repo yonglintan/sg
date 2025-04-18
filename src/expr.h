@@ -5,7 +5,7 @@
 #include <stdbool.h> // Include for bool type used in LiteralExpr
 
 typedef enum {
-    EXPR_ASSIGN,   // New: Assignment like x = 1
+    EXPR_ASSIGN, // New: Assignment like x = 1
     EXPR_BINARY,
     EXPR_GROUPING,
     EXPR_LITERAL,
@@ -27,7 +27,7 @@ typedef struct {
 // Binary: left op right
 typedef struct {
     Expr* left;
-    Token operator;
+    Token oper;
     Expr* right;
 } BinaryExpr;
 
@@ -50,7 +50,7 @@ typedef struct {
 
 // Unary: op right
 typedef struct {
-    Token operator;
+    Token oper;
     Expr* right;
 } UnaryExpr;
 
@@ -63,7 +63,7 @@ typedef struct {
 struct Expr {
     ExprType type;
     union {
-        AssignExpr assign;     // New
+        AssignExpr assign; // New
         BinaryExpr binary;
         GroupingExpr grouping;
         LiteralExpr literal;
@@ -74,13 +74,13 @@ struct Expr {
 
 // --- Constructor Functions ---
 Expr* newAssignExpr(Token name, Expr* value);
-Expr* newBinaryExpr(Expr* left, Token operator, Expr* right);
+Expr* newBinaryExpr(Expr* left, Token oper, Expr* right);
 Expr* newGroupingExpr(Expr* expression);
 Expr* newLiteralNumberExpr(double value);
 Expr* newLiteralBooleanExpr(bool value);
 Expr* newLiteralStringExpr(char* value); // Assumes value is already managed/copied if needed
 Expr* newLiteralNilExpr();
-Expr* newUnaryExpr(Token operator, Expr* right);
+Expr* newUnaryExpr(Token oper, Expr* right);
 Expr* newVariableExpr(Token name);
 
 // --- Memory Management ---
@@ -90,4 +90,4 @@ void freeExpr(Expr* expr);
 // (Optional but helpful) Function to print AST representation
 char* printExpr(Expr* expr);
 
-#endif 
+#endif

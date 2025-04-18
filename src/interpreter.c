@@ -52,7 +52,7 @@ void freeInterpreter() {
 
 // Note: Uses the name `runtimeError` as defined in the header.
 void runtimeError(Token* token, const char* format, ...) {
-    if (runtimeErrorOccurred) return;  // Report only the first error
+    if (runtimeErrorOccurred) return; // Report only the first error
     runtimeErrorOccurred = true;
 
     fprintf(stderr, "[line %d] Runtime Error", token ? token->line : 0);
@@ -86,8 +86,15 @@ static void executeStmt(Stmt* stmt) {
 
     switch (stmt->type) {
         case STMT_EXPRESSION: {
-            evaluateExpr(
-                stmt->as.expression.expression);  // Evaluate for side effects
+            evaluateExpr(stmt->as.expression.expression); // Evaluate for side effects
+            break;
+        }
+        case STMT_IF: {
+            if (isTruthy(evaluateExpr(stmt->as.ifStmt.condition))) {
+                executeStmt(stmt->as.ifStmt.thenBranch);
+            } else if (stmt->as.ifStmt.elseBranch != NULL) {
+                executeStmt(stmt->as.ifStmt.elseBranch);
+            }
             break;
         }
         case STMT_PRINT: {
@@ -100,7 +107,7 @@ static void executeStmt(Stmt* stmt) {
             break;
         }
         case STMT_VAR: {
-            Value value = NIL_VAL;  // Default value
+            Value value = NIL_VAL; // Default value
             if (stmt->as.var.initializer != NULL) {
                 value = evaluateExpr(stmt->as.var.initializer);
                 if (runtimeErrorOccurred) return;
@@ -123,10 +130,8 @@ static void executeStmt(Stmt* stmt) {
             break;
         }
         case STMT_BLOCK: {
-            // creates a new environment for the block, enclosing the current
-            // one
-            Environment* blockEnvironment =
-                newEnclosedEnvironment(currentEnvironment);
+            // creates a new environment for the block, enclosing the current one
+            Environment* blockEnvironment = newEnclosedEnvironment(currentEnvironment);
             if (blockEnvironment == NULL) {
                 runtimeError(NULL, "Memory error creating block environment.");
                 return;
@@ -163,7 +168,7 @@ static void executeBlock(StmtList* statements, Environment* environment) {
 static bool isTruthy(Value value) {
     if (IS_NIL(value)) return false;
     if (IS_BOOL(value)) return AS_BOOL(value);
-    return true;  // Numbers (and future objects) are truthy
+    return true; // Numbers (and future objects) are truthy
 }
 
 static void checkNumberOperand(Token* operatorToken, Value operand) {
@@ -186,8 +191,7 @@ static Value evaluateExpr(Expr* expr) {
                     return NUMBER_VAL(expr->as.literal.value.number);
                 case TOKEN_STRING: {
                     int length = strlen(expr->as.literal.value.string);
-                    ObjString* stringObj =
-                        copyString(expr->as.literal.value.string, length);
+                    ObjString* stringObj = copyString(expr->as.literal.value.string, length);
                     if (stringObj == NULL) {
                         runtimeError(NULL,
                                      "Memory error creating string value.");
@@ -213,15 +217,15 @@ static Value evaluateExpr(Expr* expr) {
         case EXPR_UNARY: {
             Value right = evaluateExpr(expr->as.unary.right);
             if (runtimeErrorOccurred) return NIL_VAL;
-            switch (expr->as.unary.operator.type) {
+            switch (expr->as.unary.oper.type) {
                 case TOKEN_BANG:
                     return BOOL_VAL(!isTruthy(right));
                 case TOKEN_MINUS:
-                    checkNumberOperand(&expr->as.unary.operator, right);
+                    checkNumberOperand(&expr->as.unary.oper, right);
                     if (runtimeErrorOccurred) return NIL_VAL;
                     return NUMBER_VAL(-AS_NUMBER(right));
                 default:
-                    runtimeError(&expr->as.unary.operator,
+                    runtimeError(&expr->as.unary.oper,
                                  "Interpreter error: Unknown unary op.");
                     return NIL_VAL;
             }
@@ -231,21 +235,21 @@ static Value evaluateExpr(Expr* expr) {
             if (runtimeErrorOccurred) return NIL_VAL;
             Value right = evaluateExpr(expr->as.binary.right);
             if (runtimeErrorOccurred) return NIL_VAL;
-            switch (expr->as.binary.operator.type) {
+            switch (expr->as.binary.oper.type) {
                 case TOKEN_GREATER:
-                    checkNumberOperands(&expr->as.binary.operator, left, right);
+                    checkNumberOperands(&expr->as.binary.oper, left, right);
                     if (runtimeErrorOccurred) return NIL_VAL;
                     return BOOL_VAL(AS_NUMBER(left) > AS_NUMBER(right));
                 case TOKEN_GREATER_EQUAL:
-                    checkNumberOperands(&expr->as.binary.operator, left, right);
+                    checkNumberOperands(&expr->as.binary.oper, left, right);
                     if (runtimeErrorOccurred) return NIL_VAL;
                     return BOOL_VAL(AS_NUMBER(left) >= AS_NUMBER(right));
                 case TOKEN_LESS:
-                    checkNumberOperands(&expr->as.binary.operator, left, right);
+                    checkNumberOperands(&expr->as.binary.oper, left, right);
                     if (runtimeErrorOccurred) return NIL_VAL;
                     return BOOL_VAL(AS_NUMBER(left) < AS_NUMBER(right));
                 case TOKEN_LESS_EQUAL:
-                    checkNumberOperands(&expr->as.binary.operator, left, right);
+                    checkNumberOperands(&expr->as.binary.oper, left, right);
                     if (runtimeErrorOccurred) return NIL_VAL;
                     return BOOL_VAL(AS_NUMBER(left) <= AS_NUMBER(right));
                 case TOKEN_BANG_EQUAL:
@@ -253,18 +257,18 @@ static Value evaluateExpr(Expr* expr) {
                 case TOKEN_EQUAL_EQUAL:
                     return BOOL_VAL(valuesEqual(left, right));
                 case TOKEN_MINUS:
-                    checkNumberOperands(&expr->as.binary.operator, left, right);
+                    checkNumberOperands(&expr->as.binary.oper, left, right);
                     if (runtimeErrorOccurred) return NIL_VAL;
                     return NUMBER_VAL(AS_NUMBER(left) - AS_NUMBER(right));
                 case TOKEN_STAR:
-                    checkNumberOperands(&expr->as.binary.operator, left, right);
+                    checkNumberOperands(&expr->as.binary.oper, left, right);
                     if (runtimeErrorOccurred) return NIL_VAL;
                     return NUMBER_VAL(AS_NUMBER(left) * AS_NUMBER(right));
                 case TOKEN_SLASH:
-                    checkNumberOperands(&expr->as.binary.operator, left, right);
+                    checkNumberOperands(&expr->as.binary.oper, left, right);
                     if (runtimeErrorOccurred) return NIL_VAL;
                     if (AS_NUMBER(right) == 0) {
-                        runtimeError(&expr->as.binary.operator,
+                        runtimeError(&expr->as.binary.oper,
                                      "Division by zero.");
                         return NIL_VAL;
                     }
@@ -292,11 +296,11 @@ static Value evaluateExpr(Expr* expr) {
                         return OBJ_VAL(copyString(result, totalLength));
                     }
                     runtimeError(
-                        &expr->as.binary.operator,
+                        &expr->as.binary.oper,
                         "Operands must be two numbers or two strings.");
                     return NIL_VAL;
                 default:
-                    runtimeError(&expr->as.binary.operator,
+                    runtimeError(&expr->as.binary.oper,
                                  "Interpreter error: Unknown binary op.");
                     return NIL_VAL;
             }

@@ -1,6 +1,6 @@
-#include <stdlib.h>
 #include "stmt.h"
 #include "expr.h"
+#include <stdlib.h>
 
 // creation of statements. i think we can probably refactor this but idk if keeping it separate for now is better in case
 // we gta do more specific stuff
@@ -8,6 +8,15 @@ Stmt* newExpressionStmt(Expr* expression) {
     Stmt* stmt = (Stmt*)malloc(sizeof(Stmt));
     stmt->type = STMT_EXPRESSION;
     stmt->as.expression.expression = expression;
+    return stmt;
+}
+
+Stmt* newIfStmt(Expr* condition, Stmt* thenBranch, Stmt* elseBranch) {
+    Stmt* stmt = (Stmt*)malloc(sizeof(Stmt));
+    stmt->type = STMT_IF;
+    stmt->as.ifStmt.condition = condition;
+    stmt->as.ifStmt.thenBranch = thenBranch;
+    stmt->as.ifStmt.elseBranch = elseBranch;
     return stmt;
 }
 
@@ -48,6 +57,11 @@ void freeStmt(Stmt* stmt) {
         case STMT_EXPRESSION:
             freeExpr(stmt->as.expression.expression);
             break;
+        case STMT_IF:
+            freeExpr(stmt->as.ifStmt.condition);
+            freeStmt(stmt->as.ifStmt.thenBranch);
+            freeStmt(stmt->as.ifStmt.elseBranch);
+            break;
         case STMT_PRINT:
             freeExpr(stmt->as.print.expression);
             break;
@@ -74,4 +88,4 @@ void freeStmtList(StmtList* list) {
     // then we free the current and list node
     freeStmt(list->stmt);
     free(list);
-} 
+}

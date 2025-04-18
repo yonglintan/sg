@@ -28,6 +28,7 @@ static void error(Parser* parser, Token token, const char* message);
 
 static Stmt* declaration(Parser* parser);
 static Stmt* statement(Parser* parser);
+static Stmt* ifStatement(Parser* parser);
 static Stmt* printStatement(Parser* parser);
 static Stmt* expressionStatement(Parser* parser);
 static Stmt* varDeclaration(Parser* parser);
@@ -197,6 +198,9 @@ static Stmt* declaration(Parser* parser) {
 
 // statement -> exprStmt | printStmt | block
 static Stmt* statement(Parser* parser) {
+    if (match(parser, TOKEN_IF)) {
+        return ifStatement(parser);
+    }
     if (match(parser, TOKEN_PRINT)) {
         return printStatement(parser);
     }
@@ -211,6 +215,32 @@ static Stmt* statement(Parser* parser) {
     }
     // Default to an expression statement
     return expressionStatement(parser);
+}
+
+// ifStmt -> "if" "(" expression ")" statement ( "else" statement )?
+static Stmt* ifStatement(Parser* parser) {
+    Token leftParen = consume(parser, TOKEN_LEFT_PAREN, "Expect '(' after 'if'.");
+    if (leftParen.type == TOKEN_ERROR)
+        return NULL; // Error consuming left parenthesis
+    Expr* condition = expression(parser);
+    if (parser->hadError)
+        return NULL; // Propagate error
+    Token rightParen = consume(parser, TOKEN_RIGHT_PAREN, "Expect ')' after if condition.");
+    if (rightParen.type == TOKEN_ERROR)
+        return NULL; // Error consuming right parenthesis
+
+    Stmt* thenBranch = statement(parser);
+    if (parser->hadError) {
+        return NULL;
+    }
+    Stmt* elseBranch = NULL;
+    if (match(parser, TOKEN_ELSE)) {
+        elseBranch = statement(parser);
+        if (parser->hadError)
+            return NULL;
+    }
+
+    return newIfStmt(condition, thenBranch, elseBranch);
 }
 
 // printStmt -> "print" expression
