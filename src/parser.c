@@ -32,6 +32,7 @@ static Stmt* declaration(Parser* parser);
 static Stmt* statement(Parser* parser);
 static Stmt* ifStatement(Parser* parser);
 static Stmt* printStatement(Parser* parser);
+static Stmt* whileStatement(Parser* parser);
 static Stmt* expressionStatement(Parser* parser);
 static Stmt* varDeclaration(Parser* parser);
 static StmtList* block(Parser* parser); // Returns a list for BlockStmt
@@ -198,13 +199,16 @@ static Stmt* declaration(Parser* parser) {
     return stmt;
 }
 
-// statement -> exprStmt | ifStmt | printStmt | block
+// statement -> exprStmt | ifStmt | printStmt | whileStmt | block ;
 static Stmt* statement(Parser* parser) {
     if (match(parser, TOKEN_IF)) {
         return ifStatement(parser);
     }
     if (match(parser, TOKEN_PRINT)) {
         return printStatement(parser);
+    }
+    if (match(parser, TOKEN_WHILE)) {
+        return whileStatement(parser);
     }
     if (check(parser, TOKEN_LEFT_BRACE)) {
         StmtList* blockStmts = block(parser); // block() handles {} and returns list
@@ -252,6 +256,20 @@ static Stmt* printStatement(Parser* parser) {
     Token semicolon = consume(parser, TOKEN_SEMICOLON, "Expect ';' after print value.");
     if (semicolon.type == TOKEN_ERROR) return NULL; // Error consuming semicolon
     return newPrintStmt(value);
+}
+
+// whileStmt -> "while" "(" expression ")" statement ;
+static Stmt* whileStatement(Parser* parser) {
+    Token leftParen = consume(parser, TOKEN_LEFT_PAREN, "Expect '(' after 'while'.");
+    if (leftParen.type == TOKEN_ERROR) return NULL; // Error consuming parenthesis
+    Expr* condition = expression(parser);
+    if (parser->hadError) return NULL;
+    Token rightParen = consume(parser, TOKEN_RIGHT_PAREN, "Expect ')' after condition.");
+    if (leftParen.type == TOKEN_ERROR) return NULL; // Error consuming parenthesis
+    Stmt* body = statement(parser);
+    if (parser->hadError) return NULL;
+
+    return newWhileStmt(condition, body);
 }
 
 // exprStmt -> expression
@@ -324,7 +342,6 @@ static StmtList* block(Parser* parser) {
     }
 
     Token closingBrace = consume(parser, TOKEN_RIGHT_BRACE, "Expect '}' after block.");
-    if (closingBrace.type == TOKEN_ERROR) return NULL;
     // (void)closingBrace;
 
     // If we exited the loop due to an error OR failed to consume '}', cleanup & return NULL

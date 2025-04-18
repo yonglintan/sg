@@ -106,6 +106,12 @@ static void executeStmt(Stmt* stmt) {
             // strings)
             break;
         }
+        case STMT_WHILE: {
+            while (isTruthy(evaluateExpr(stmt->as.whileStmt.condition))) {
+                executeStmt(stmt->as.whileStmt.body);
+            }
+            break;
+        }
         case STMT_VAR: {
             Value value = NIL_VAL; // Default value
             if (stmt->as.var.initializer != NULL) {
