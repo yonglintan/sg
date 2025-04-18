@@ -265,7 +265,7 @@ static Stmt* whileStatement(Parser* parser) {
     Expr* condition = expression(parser);
     if (parser->hadError) return NULL;
     Token rightParen = consume(parser, TOKEN_RIGHT_PAREN, "Expect ')' after condition.");
-    if (leftParen.type == TOKEN_ERROR) return NULL; // Error consuming parenthesis
+    if (rightParen.type == TOKEN_ERROR) return NULL; // Error consuming parenthesis
     Stmt* body = statement(parser);
     if (parser->hadError) return NULL;
 
