@@ -1,0 +1,44 @@
+// Tests for if/else control flow
+
+print "--- Testing If/Else --- (done)";
+
+var condition = true;
+var result = 0;
+
+// Basic if
+if (condition) {
+  result = 1;
+}
+print result; // Expected: 1
+
+// Basic if/else (true path)
+if (condition) {
+  result = 2;
+} else {
+  result = 99;
+}
+print result; // Expected: 2
+
+// Basic if/else (false path)
+if (!condition) {
+  result = 98;
+} else {
+  result = 3;
+}
+print result; // Expected: 3
+
+// Truthiness in conditions
+if (1) { print "Number is truthy"; }       // Expected: Number is truthy
+if (0) { print "Zero is truthy? NO"; }
+if (nil) { print "Nil is truthy? NO"; } // shouldn't print
+if ("") { print "Empty string is truthy?"; } // Expected: Empty string is truthy
+
+// Else if chains
+var grade = 85;
+if (grade >= 90) {
+  print "A";
+} else if (grade >= 80) {
+  print "B"; // Expected: B
+} else {
+  print "C or lower";
+}
