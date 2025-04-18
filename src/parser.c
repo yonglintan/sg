@@ -196,7 +196,7 @@ static Stmt* declaration(Parser* parser) {
     return stmt;
 }
 
-// statement -> exprStmt | printStmt | block
+// statement -> exprStmt | ifStmt | printStmt | block
 static Stmt* statement(Parser* parser) {
     if (match(parser, TOKEN_IF)) {
         return ifStatement(parser);
