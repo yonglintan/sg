@@ -2,3 +2,5 @@ BasedOnStyle: WebKit
 BreakBeforeBraces: Attach
 AllowShortIfStatementsOnASingleLine: true
 IndentCaseLabels: true
+AlignAfterOpenBracket: Align
+
