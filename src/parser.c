@@ -1,11 +1,11 @@
+#include "parser.h"
+#include "expr.h"
+#include "scanner.h"
+#include "stmt.h"
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdbool.h>
 #include <string.h>
-#include "parser.h"
-#include "scanner.h"
-#include "expr.h"
-#include "stmt.h"
 
 static Expr* expression(Parser* parser);
 static Expr* assignment(Parser* parser);
@@ -89,7 +89,7 @@ static void errorAt(Parser* parser, Token token, const char* message) {
         fprintf(stderr, " at end");
     } else if (token.type == TOKEN_ERROR) {
         // Nothing - error token already has message
-         fprintf(stderr, ""); // Ensure ':' is added
+        fprintf(stderr, ""); // Ensure ':' is added
     } else {
         fprintf(stderr, " at '%.*s'", token.length, token.start);
     }
@@ -140,7 +140,7 @@ static Token consume(Parser* parser, TokenType type, const char* message) {
     if (check(parser, type)) return advance(parser);
     errorAtCurrent(parser, message);
 
-    // can either return an error token or handle differently? 
+    // can either return an error token or handle differently?
     // For now, return previous potentially? idk
     return peek(parser);
 }
@@ -227,7 +227,7 @@ static Stmt* expressionStatement(Parser* parser) {
     Expr* expr = expression(parser); // Parse the expression
     if (parser->hadError) return NULL; // Propagate error
     Token semicolon = consume(parser, TOKEN_SEMICOLON, "Expect ';' after expression.");
-     if (semicolon.type == TOKEN_ERROR) return NULL; // Error consuming semicolon
+    if (semicolon.type == TOKEN_ERROR) return NULL; // Error consuming semicolon
     return newExpressionStmt(expr);
 }
 
@@ -260,8 +260,8 @@ static Stmt* varDeclaration(Parser* parser) {
 static StmtList* block(Parser* parser) {
     // Consume the opening brace '{'
     if (!match(parser, TOKEN_LEFT_BRACE)) { // Should be checked before calling statement()
-         errorAtCurrent(parser, "Expected '{' to start block.");
-         return NULL;
+        errorAtCurrent(parser, "Expected '{' to start block.");
+        return NULL;
     }
 
     StmtList* statements = NULL;
@@ -299,7 +299,7 @@ static StmtList* block(Parser* parser) {
         // If closingBrace itself caused an error, statements might not be freed yet.
         // If the error was inside the loop, statements should be NULL now.
         if (statements != NULL) {
-             freeStmtList(statements);
+            freeStmtList(statements);
         }
         return NULL;
     }
@@ -331,8 +331,8 @@ static Expr* assignment(Parser* parser) {
 
         if (expr->type == EXPR_VARIABLE) {
             Token name = expr->as.variable.name;
-             Expr* assignNode = newAssignExpr(name, value);
-             return assignNode;
+            Expr* assignNode = newAssignExpr(name, value);
+            return assignNode;
 
         } else {
             error(parser, equals, "Invalid assignment target.");
@@ -352,10 +352,13 @@ static Expr* equality(Parser* parser) {
     if (parser->hadError) return NULL;
 
     while (match(parser, TOKEN_BANG_EQUAL) || match(parser, TOKEN_EQUAL_EQUAL)) {
-        Token operator = previous(parser);
+        Token oper = previous(parser);
         Expr* right = comparison(parser);
-        if (parser->hadError) { freeExpr(expr); return NULL; }
-        expr = newBinaryExpr(expr, operator, right);
+        if (parser->hadError) {
+            freeExpr(expr);
+            return NULL;
+        }
+        expr = newBinaryExpr(expr, oper, right);
     }
     return expr;
 }
@@ -363,14 +366,16 @@ static Expr* equality(Parser* parser) {
 // comparison -> term ( ( ">" | ">=" | "<" | "<=" ) term )* ;
 static Expr* comparison(Parser* parser) {
     Expr* expr = term(parser);
-     if (parser->hadError) return NULL;
+    if (parser->hadError) return NULL;
 
-    while (match(parser, TOKEN_GREATER) || match(parser, TOKEN_GREATER_EQUAL) ||
-           match(parser, TOKEN_LESS) || match(parser, TOKEN_LESS_EQUAL)) {
-        Token operator = previous(parser);
+    while (match(parser, TOKEN_GREATER) || match(parser, TOKEN_GREATER_EQUAL) || match(parser, TOKEN_LESS) || match(parser, TOKEN_LESS_EQUAL)) {
+        Token oper = previous(parser);
         Expr* right = term(parser);
-        if (parser->hadError) { freeExpr(expr); return NULL; }
-        expr = newBinaryExpr(expr, operator, right);
+        if (parser->hadError) {
+            freeExpr(expr);
+            return NULL;
+        }
+        expr = newBinaryExpr(expr, oper, right);
     }
     return expr;
 }
@@ -378,13 +383,16 @@ static Expr* comparison(Parser* parser) {
 // term -> factor ( ( "-" | "+" ) factor )* ;
 static Expr* term(Parser* parser) {
     Expr* expr = factor(parser);
-     if (parser->hadError) return NULL;
+    if (parser->hadError) return NULL;
 
     while (match(parser, TOKEN_MINUS) || match(parser, TOKEN_PLUS)) {
-        Token operator = previous(parser);
+        Token oper = previous(parser);
         Expr* right = factor(parser);
-        if (parser->hadError) { freeExpr(expr); return NULL; }
-        expr = newBinaryExpr(expr, operator, right);
+        if (parser->hadError) {
+            freeExpr(expr);
+            return NULL;
+        }
+        expr = newBinaryExpr(expr, oper, right);
     }
     return expr;
 }
@@ -395,10 +403,13 @@ static Expr* factor(Parser* parser) {
     if (parser->hadError) return NULL;
 
     while (match(parser, TOKEN_SLASH) || match(parser, TOKEN_STAR)) {
-        Token operator = previous(parser);
+        Token oper = previous(parser);
         Expr* right = unary(parser);
-        if (parser->hadError) { freeExpr(expr); return NULL; }
-        expr = newBinaryExpr(expr, operator, right);
+        if (parser->hadError) {
+            freeExpr(expr);
+            return NULL;
+        }
+        expr = newBinaryExpr(expr, oper, right);
     }
     return expr;
 }
@@ -406,10 +417,10 @@ static Expr* factor(Parser* parser) {
 // unary -> ( "!" | "-" ) unary | primary ;
 static Expr* unary(Parser* parser) {
     if (match(parser, TOKEN_BANG) || match(parser, TOKEN_MINUS)) {
-        Token operator = previous(parser);
+        Token oper = previous(parser);
         Expr* right = unary(parser);
-         if (parser->hadError) return NULL;
-        return newUnaryExpr(operator, right);
+        if (parser->hadError) return NULL;
+        return newUnaryExpr(oper, right);
     }
     return primary(parser);
 }
@@ -436,11 +447,11 @@ static Expr* primary(Parser* parser) {
         strncpy(value, strStart, length);
         value[length] = '\0';
         Expr* literal = newLiteralStringExpr(value);
-        free(value); 
+        free(value);
         return literal;
     }
 
-     if (match(parser, TOKEN_IDENTIFIER)) {
+    if (match(parser, TOKEN_IDENTIFIER)) {
         // Create a variable expression node using the identifier token
         return newVariableExpr(previous(parser));
     }
@@ -459,4 +470,4 @@ static Expr* primary(Parser* parser) {
     // If none of the above match, it's an error
     errorAtCurrent(parser, "Expect expression.");
     return NULL;
-} 
+}
