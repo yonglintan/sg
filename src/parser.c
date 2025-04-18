@@ -9,6 +9,8 @@
 
 static Expr* expression(Parser* parser);
 static Expr* assignment(Parser* parser);
+static Expr* or(Parser* parser);
+static Expr* and(Parser* parser);
 static Expr* equality(Parser* parser);
 static Expr* comparison(Parser* parser);
 static Expr* term(Parser* parser);
@@ -90,7 +92,7 @@ static void errorAt(Parser* parser, Token token, const char* message) {
         fprintf(stderr, " at end");
     } else if (token.type == TOKEN_ERROR) {
         // Nothing - error token already has message
-        fprintf(stderr, ""); // Ensure ':' is added
+        // fprintf(stderr, ""); // Ensure ':' is added
     } else {
         fprintf(stderr, " at '%.*s'", token.length, token.start);
     }
@@ -322,6 +324,7 @@ static StmtList* block(Parser* parser) {
     }
 
     Token closingBrace = consume(parser, TOKEN_RIGHT_BRACE, "Expect '}' after block.");
+    if (closingBrace.type == TOKEN_ERROR) return NULL;
     // (void)closingBrace;
 
     // If we exited the loop due to an error OR failed to consume '}', cleanup & return NULL
@@ -344,11 +347,11 @@ static Expr* expression(Parser* parser) {
     return assignment(parser); // Use assignment as the top-level expression rule
 }
 
-// assignment -> IDENTIFIER "=" assignment | equality ;
+// assignment -> IDENTIFIER "=" assignment | logic_or ;
 // eg: a = b = c;
 static Expr* assignment(Parser* parser) {
     // Parse the LHS. It might be an identifier, or something else.
-    Expr* expr = equality(parser);
+    Expr* expr = or(parser);
     if (parser->hadError) return NULL;
 
     if (match(parser, TOKEN_EQUAL)) {
@@ -372,7 +375,43 @@ static Expr* assignment(Parser* parser) {
         }
     }
 
-    // If no '=' was matched, just return the expression parsed by equality()
+    // If no '=' was matched, just return the expression parsed by or()
+    return expr;
+}
+
+// logic_or -> logic_and ( "or" logic_and )* ;
+static Expr* or(Parser* parser) {
+    Expr* expr = and(parser);
+    if (parser->hadError) return NULL;
+
+    while (match(parser, TOKEN_OR)) {
+        Token oper = previous(parser);
+        Expr* right = and(parser);
+        if (parser->hadError) {
+            freeExpr(expr);
+            return NULL;
+        }
+        expr = newLogicalExpr(expr, oper, right);
+    }
+
+    return expr;
+}
+
+// logic_and -> equality ( "and" equality )* ;
+static Expr* and(Parser* parser) {
+    Expr* expr = equality(parser);
+    if (parser->hadError) return NULL;
+
+    while (match(parser, TOKEN_AND)) {
+        Token oper = previous(parser);
+        Expr* right = equality(parser);
+        if (parser->hadError) {
+            freeExpr(expr);
+            return NULL;
+        }
+        expr = newLogicalExpr(expr, oper, right);
+    }
+
     return expr;
 }
 

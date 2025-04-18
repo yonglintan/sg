@@ -22,6 +22,15 @@ Expr* newAssignExpr(Token name, Expr* value) {
     return expr;
 }
 
+Expr* newLogicalExpr(Expr* left, Token oper, Expr* right) {
+    Expr* expr = allocateExpr(EXPR_LOGICAL);
+    if (expr == NULL) return NULL;
+    expr->as.logical.left = left;
+    expr->as.logical.oper = oper;
+    expr->as.logical.right = right;
+    return expr;
+}
+
 Expr* newBinaryExpr(Expr* left, Token oper, Expr* right) {
     Expr* expr = allocateExpr(EXPR_BINARY);
     if (expr == NULL) return NULL;
