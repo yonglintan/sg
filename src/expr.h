@@ -11,7 +11,8 @@ typedef enum {
     EXPR_GROUPING,
     EXPR_LITERAL,
     EXPR_UNARY,
-    EXPR_VARIABLE // New: Variable access like x
+    EXPR_VARIABLE, // New: Variable access like x
+    EXPR_CALL // New: Function call expression
 } ExprType;
 
 // Forward declaration needed for nested expressions
@@ -38,6 +39,14 @@ typedef struct {
     Token oper;
     Expr* right;
 } BinaryExpr;
+
+// Call:
+typedef struct {
+    Expr* callee;
+    Token paren; // closing parenthesis for error reporting
+    int arg_count;
+    Expr** arguments;
+} CallExpr;
 
 // Grouping: ( expression )
 typedef struct {
@@ -74,6 +83,7 @@ struct Expr {
         AssignExpr assign; // New
         LogicalExpr logical;
         BinaryExpr binary;
+        CallExpr call;
         GroupingExpr grouping;
         LiteralExpr literal;
         UnaryExpr unary;
@@ -85,6 +95,7 @@ struct Expr {
 Expr* newAssignExpr(Token name, Expr* value);
 Expr* newLogicalExpr(Expr* left, Token oper, Expr* right);
 Expr* newBinaryExpr(Expr* left, Token oper, Expr* right);
+Expr* newCallExpr(Expr* callee, Token paren, int arg_count, Expr** arguments);
 Expr* newGroupingExpr(Expr* expression);
 Expr* newLiteralNumberExpr(double value);
 Expr* newLiteralBooleanExpr(bool value);

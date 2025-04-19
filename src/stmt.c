@@ -57,6 +57,26 @@ StmtList* newStmtList(Stmt* stmt, StmtList* next) {
     return list;
 }
 
+Stmt* newFunctionStmt(Token name, int param_count, Token* params, StmtList* body) {
+    Stmt* stmt = (Stmt*)malloc(sizeof(Stmt));
+    if (stmt == NULL) return NULL;
+    stmt->type = STMT_FUNCTION;
+    stmt->as.function.name = name;
+    stmt->as.function.param_count = param_count;
+    stmt->as.function.params = params;
+    stmt->as.function.body = body;
+    return stmt;
+}
+
+Stmt* newReturnStmt(Token keyword, Expr* value) {
+    Stmt* stmt = (Stmt*)malloc(sizeof(Stmt));
+    if (stmt == NULL) return NULL;
+    stmt->type = STMT_RETURN;
+    stmt->as.return_stmt.keyword = keyword;
+    stmt->as.return_stmt.value = value;
+    return stmt;
+}
+
 // free a statement (and any expressions it contains)
 void freeStmt(Stmt* stmt) {
     if (stmt == NULL) return;
@@ -80,6 +100,15 @@ void freeStmt(Stmt* stmt) {
             break;
         case STMT_BLOCK:
             freeStmtList(stmt->as.block.statements);
+            break;
+        case STMT_FUNCTION:
+            free(stmt->as.function.params);
+            freeStmtList(stmt->as.function.body);
+            break;
+        case STMT_RETURN:
+            if (stmt->as.return_stmt.value != NULL) {
+                freeExpr(stmt->as.return_stmt.value);
+            }
             break;
     }
 

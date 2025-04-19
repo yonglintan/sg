@@ -100,6 +100,16 @@ Expr* newVariableExpr(Token name) {
     return expr;
 }
 
+Expr* newCallExpr(Expr* callee, Token paren, int arg_count, Expr** arguments) {
+    Expr* expr = allocateExpr(EXPR_CALL);
+    if (expr == NULL) return NULL;
+    expr->as.call.callee = callee;
+    expr->as.call.paren = paren;
+    expr->as.call.arg_count = arg_count;
+    expr->as.call.arguments = arguments;
+    return expr;
+}
+
 void freeExpr(Expr* expr) {
     if (expr == NULL) return;
 
@@ -135,6 +145,14 @@ void freeExpr(Expr* expr) {
             // The token itself is not owned by the expression node
             break;
         }
+        case EXPR_CALL:
+            freeExpr(expr->as.call.callee);
+            for (int i = 0; i < expr->as.call.arg_count; i++) {
+                freeExpr(expr->as.call.arguments[i]);
+            }
+            free(expr->as.call.arguments);
+            break;
+
         // Add default case to handle potential future types or errors
         default:
             // Optionally report an error or log unknown type

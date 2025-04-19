@@ -12,11 +12,14 @@
 #include "object.h"
 #include "scanner.h"
 #include "stmt.h"
+#include <time.h>
 
 // --- Global State ---
 static Environment* globalEnvironment = NULL;
 static Environment* currentEnvironment = NULL;
 static bool runtimeErrorOccurred = false;
+static bool had_return = false;
+static Value return_value = NIL_VAL;
 
 // ===== Forward Declarations for Static Helpers =====
 static Value evaluateExpr(Expr* expr);
@@ -25,6 +28,11 @@ static void executeBlock(StmtList* statements, Environment* environment);
 static bool isTruthy(Value value);
 static void checkNumberOperand(Token* operatorToken, Value operand);
 static void checkNumberOperands(Token* operatorToken, Value left, Value right);
+static Value callFunction(ObjFunction* function, Value* arguments, int arg_count);
+static Value visitCallExpr(Expr* expr);
+static Value clockNative(struct Interpreter* interpreter, int arg_count, Value* args);
+
+
 
 // --- Interpreter Initialization and Cleanup ---
 void initInterpreter() {
@@ -34,6 +42,13 @@ void initInterpreter() {
             fprintf(stderr,
                     "Fatal: Could not initialize global environment.\n");
             exit(74);
+        }
+
+        ObjNative* clockFn = newNative(0, clockNative);
+        if (clockFn != NULL) {
+            clockFn->arity = 0;
+            clockFn->function = clockNative;
+            environmentDefine(globalEnvironment, "clock", OBJ_VAL(clockFn));
         }
     }
     currentEnvironment = globalEnvironment;
@@ -147,6 +162,37 @@ static void executeStmt(Stmt* stmt) {
             // environment is freed within executeBlock after execution
             break;
         }
+        case STMT_FUNCTION: {
+            // create function object with the current environment as closure
+            ObjFunction* function = newFunction(stmt, currentEnvironment);
+            if (function == NULL) {
+                runtimeError(&stmt->as.function.name, "Memory error creating function.");
+                return;
+            }
+            
+            char* name = malloc(stmt->as.function.name.length + 1);
+            if (name == NULL) {
+                runtimeError(&stmt->as.function.name, "Memory error processing function name.");
+                return;
+            }
+            strncpy(name, stmt->as.function.name.start, stmt->as.function.name.length);
+            name[stmt->as.function.name.length] = '\0';
+            
+            environmentDefine(currentEnvironment, name, OBJ_VAL(function));
+            free(name);
+            break;
+        }
+        case STMT_RETURN: {
+            Value value = NIL_VAL;
+            if (stmt->as.return_stmt.value != NULL) {
+                value = evaluateExpr(stmt->as.return_stmt.value);
+                if (runtimeErrorOccurred) return;
+            }
+            
+            had_return = true;
+            return_value = value;
+            break;
+        }
         default:
             runtimeError(NULL, "Interpreter error: Unknown statement type %d.",
                          stmt->type);
@@ -160,14 +206,58 @@ static void executeBlock(StmtList* statements, Environment* environment) {
     currentEnvironment = environment;
 
     StmtList* current = statements;
-    // executes statements until the end or a runtime error occurs
-    while (current != NULL && !runtimeErrorOccurred) {
+    // executes statements until the end or a runtime error occurs or if a return occurs
+    while (current != NULL && !runtimeErrorOccurred && !had_return) {
         executeStmt(current->stmt);
         current = current->next;
     }
 
     currentEnvironment = previousEnvironment;
     freeEnvironment(environment);
+}
+
+
+static Value callFunction(ObjFunction* function, Value* arguments, int arg_count) {
+    (void)arg_count;
+    Environment* environment = newEnclosedEnvironment(function->closure);
+    if (environment == NULL) {
+        runtimeError(NULL, "Memory error creating function environment.");
+        return NIL_VAL;
+    }
+    
+    // Bind arguments to parameters
+    for (int i = 0; i < function->declaration->as.function.param_count; i++) {
+        Token param = function->declaration->as.function.params[i];
+        
+        char* name = malloc(param.length + 1);
+        if (name == NULL) {
+            runtimeError(&param, "Memory error processing parameter name.");
+            freeEnvironment(environment);
+            return NIL_VAL;
+        }
+        strncpy(name, param.start, param.length);
+        name[param.length] = '\0';
+        
+        environmentDefine(environment, name, arguments[i]);
+        free(name);
+    }
+    
+    Environment* previous = currentEnvironment;
+    currentEnvironment = environment;
+    
+    had_return = false;
+    
+    executeBlock(function->declaration->as.function.body, environment);
+    
+    currentEnvironment = previous;
+    
+    if (had_return) {
+        Value result = return_value;
+        had_return = false;
+        return result;
+    }
+    
+    return NIL_VAL;
 }
 
 // ===== Expression Evaluation stuff =====
@@ -185,6 +275,13 @@ static void checkNumberOperand(Token* operatorToken, Value operand) {
 static void checkNumberOperands(Token* operatorToken, Value left, Value right) {
     if (IS_NUMBER(left) && IS_NUMBER(right)) return;
     runtimeError(operatorToken, "Operands must be numbers.");
+}
+
+static Value clockNative(struct Interpreter* interpreter, int arg_count, Value* args) {
+    (void)interpreter;
+    (void)arg_count;
+    (void)args;
+    return NUMBER_VAL((double)time(NULL));
 }
 
 static Value evaluateExpr(Expr* expr) {
@@ -372,6 +469,9 @@ static Value evaluateExpr(Expr* expr) {
                 return NIL_VAL;
             }
         }
+        case EXPR_CALL:
+            return visitCallExpr(expr);
+
         default:
             runtimeError(NULL, "Interpreter error: Unknown expression type %d.",
                          expr->type);
@@ -380,4 +480,61 @@ static Value evaluateExpr(Expr* expr) {
     runtimeError(NULL, "Interpreter error: Unknown expression type %d.",
                  expr->type);
     return NIL_VAL;
+}
+
+static Value visitCallExpr(Expr* expr) {
+    Value callee = evaluateExpr(expr->as.call.callee);
+    if (runtimeErrorOccurred) return NIL_VAL;
+    
+    Value* arguments = malloc(sizeof(Value) * expr->as.call.arg_count);
+    if (arguments == NULL && expr->as.call.arg_count > 0) {
+        runtimeError(&expr->as.call.paren, "Memory error evaluating function arguments.");
+        return NIL_VAL;
+    }
+    
+    for (int i = 0; i < expr->as.call.arg_count; i++) {
+        arguments[i] = evaluateExpr(expr->as.call.arguments[i]);
+        if (runtimeErrorOccurred) {
+            free(arguments);
+            return NIL_VAL;
+        }
+    }
+    
+    if (IS_OBJ(callee) && OBJ_TYPE(callee) == OBJ_FUNCTION) {
+        ObjFunction* function = (ObjFunction*)AS_OBJ(callee);
+        
+        if (expr->as.call.arg_count != function->arity) {
+            char error[100];
+            sprintf(error, "Expected %d arguments but got %d.", 
+                   function->arity, expr->as.call.arg_count);
+            runtimeError(&expr->as.call.paren, error);
+            free(arguments);
+            return NIL_VAL;
+        }
+        
+        Value result = callFunction(function, arguments, expr->as.call.arg_count);
+        free(arguments);
+        return result;
+    } 
+    else if (IS_OBJ(callee) && OBJ_TYPE(callee) == OBJ_NATIVE) {
+        ObjNative* native = (ObjNative*)AS_OBJ(callee);
+        
+        if (expr->as.call.arg_count != native->arity) {
+            char error[100];
+            sprintf(error, "Expected %d arguments but got %d.", 
+                   native->arity, expr->as.call.arg_count);
+            runtimeError(&expr->as.call.paren, error);
+            free(arguments);
+            return NIL_VAL;
+        }
+        
+        Value result = native->function(NULL, expr->as.call.arg_count, arguments);
+        free(arguments);
+        return result;
+    } 
+    else {
+        runtimeError(&expr->as.call.paren, "Can only call functions.");
+        free(arguments);
+        return NIL_VAL;
+    }
 }
