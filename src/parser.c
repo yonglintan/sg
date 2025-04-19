@@ -30,6 +30,7 @@ static void error(Parser* parser, Token token, const char* message);
 
 static Stmt* declaration(Parser* parser);
 static Stmt* statement(Parser* parser);
+static Stmt* forStatement(Parser* parser);
 static Stmt* ifStatement(Parser* parser);
 static Stmt* printStatement(Parser* parser);
 static Stmt* whileStatement(Parser* parser);
@@ -199,8 +200,11 @@ static Stmt* declaration(Parser* parser) {
     return stmt;
 }
 
-// statement -> exprStmt | ifStmt | printStmt | whileStmt | block ;
+// statement -> exprStmt | forStmt | ifStmt | printStmt | whileStmt | block ;
 static Stmt* statement(Parser* parser) {
+    if (match(parser, TOKEN_FOR)) {
+        return forStatement(parser);
+    }
     if (match(parser, TOKEN_IF)) {
         return ifStatement(parser);
     }
@@ -223,16 +227,69 @@ static Stmt* statement(Parser* parser) {
     return expressionStatement(parser);
 }
 
+// forStmt -> "for" "(" ( varDecl | exprStmt | ";" ) expression? ";" expression? ")" statement ;
+static Stmt* forStatement(Parser* parser) {
+    Token leftParen = consume(parser, TOKEN_LEFT_PAREN, "Expect '(' after 'for'.");
+    if (parser->hadError || leftParen.type == TOKEN_ERROR) return NULL;
+
+    Stmt* initializer;
+    if (match(parser, TOKEN_SEMICOLON)) {
+        initializer = NULL;
+    } else if (match(parser, TOKEN_VAR)) {
+        initializer = varDeclaration(parser);
+        if (parser->hadError) return NULL;
+    } else {
+        initializer = expressionStatement(parser);
+        if (parser->hadError) return NULL;
+    }
+
+    Expr* condition = NULL;
+    if (!check(parser, TOKEN_SEMICOLON)) {
+        condition = expression(parser);
+        if (parser->hadError) return NULL;
+    }
+    consume(parser, TOKEN_SEMICOLON, "Expect ';' after loop condition.");
+    if (parser->hadError) return NULL;
+
+    Expr* increment = NULL;
+    if (!check(parser, TOKEN_RIGHT_PAREN)) {
+        increment = expression(parser);
+        if (parser->hadError) return NULL;
+    }
+    consume(parser, TOKEN_RIGHT_PAREN, "Expect ')' after for clauses.");
+    if (parser->hadError) return NULL;
+
+    Stmt* body = statement(parser);
+    if (parser->hadError) return NULL;
+
+    if (increment != NULL) {
+        StmtList* incrNode = newStmtList(newExpressionStmt(increment), NULL);
+        body = newBlockStmt(newStmtList(body, incrNode));
+    }
+
+    if (condition == NULL) {
+        condition = newLiteralBooleanExpr(true);
+    }
+    body = newWhileStmt(condition, body);
+
+    if (initializer != NULL) {
+        StmtList* bodyNode = newStmtList(body, NULL);
+        body = newBlockStmt(newStmtList(initializer, bodyNode));
+    }
+
+    return body;
+}
+
 // ifStmt -> "if" "(" expression ")" statement ( "else" statement )?
 static Stmt* ifStatement(Parser* parser) {
     Token leftParen = consume(parser, TOKEN_LEFT_PAREN, "Expect '(' after 'if'.");
-    if (leftParen.type == TOKEN_ERROR)
+    if (parser->hadError || leftParen.type == TOKEN_ERROR)
         return NULL; // Error consuming left parenthesis
     Expr* condition = expression(parser);
     if (parser->hadError)
         return NULL; // Propagate error
     Token rightParen = consume(parser, TOKEN_RIGHT_PAREN, "Expect ')' after if condition.");
-    if (rightParen.type == TOKEN_ERROR)
+    if (parser->hadError || rightParen.type == TOKEN_ERROR)
         return NULL; // Error consuming right parenthesis
 
     Stmt* thenBranch = statement(parser);
@@ -261,11 +318,11 @@ static Stmt* printStatement(Parser* parser) {
 // whileStmt -> "while" "(" expression ")" statement ;
 static Stmt* whileStatement(Parser* parser) {
     Token leftParen = consume(parser, TOKEN_LEFT_PAREN, "Expect '(' after 'while'.");
-    if (leftParen.type == TOKEN_ERROR) return NULL; // Error consuming parenthesis
+    if (parser->hadError || leftParen.type == TOKEN_ERROR) return NULL; // Error consuming parenthesis
     Expr* condition = expression(parser);
     if (parser->hadError) return NULL;
     Token rightParen = consume(parser, TOKEN_RIGHT_PAREN, "Expect ')' after condition.");
-    if (rightParen.type == TOKEN_ERROR) return NULL; // Error consuming parenthesis
+    if (parser->hadError || rightParen.type == TOKEN_ERROR) return NULL; // Error consuming parenthesis
     Stmt* body = statement(parser);
     if (parser->hadError) return NULL;
 
