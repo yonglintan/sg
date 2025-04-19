@@ -27,6 +27,14 @@ Stmt* newPrintStmt(Expr* expression) {
     return stmt;
 }
 
+Stmt* newWhileStmt(Expr* condition, Stmt* body) {
+    Stmt* stmt = (Stmt*)malloc(sizeof(Stmt));
+    stmt->type = STMT_WHILE;
+    stmt->as.whileStmt.condition = condition;
+    stmt->as.whileStmt.body = body;
+    return stmt;
+}
+
 Stmt* newVarStmt(Token name, Expr* initializer) {
     Stmt* stmt = (Stmt*)malloc(sizeof(Stmt));
     stmt->type = STMT_VAR;

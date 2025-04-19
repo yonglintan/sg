@@ -9,6 +9,8 @@
 
 static Expr* expression(Parser* parser);
 static Expr* assignment(Parser* parser);
+static Expr* or(Parser* parser);
+static Expr* and(Parser* parser);
 static Expr* equality(Parser* parser);
 static Expr* comparison(Parser* parser);
 static Expr* term(Parser* parser);
@@ -28,8 +30,10 @@ static void error(Parser* parser, Token token, const char* message);
 
 static Stmt* declaration(Parser* parser);
 static Stmt* statement(Parser* parser);
+static Stmt* forStatement(Parser* parser);
 static Stmt* ifStatement(Parser* parser);
 static Stmt* printStatement(Parser* parser);
+static Stmt* whileStatement(Parser* parser);
 static Stmt* expressionStatement(Parser* parser);
 static Stmt* varDeclaration(Parser* parser);
 static StmtList* block(Parser* parser); // Returns a list for BlockStmt
@@ -90,7 +94,7 @@ static void errorAt(Parser* parser, Token token, const char* message) {
         fprintf(stderr, " at end");
     } else if (token.type == TOKEN_ERROR) {
         // Nothing - error token already has message
-        fprintf(stderr, ""); // Ensure ':' is added
+        // fprintf(stderr, ""); // Ensure ':' is added
     } else {
         fprintf(stderr, " at '%.*s'", token.length, token.start);
     }
@@ -196,13 +200,19 @@ static Stmt* declaration(Parser* parser) {
     return stmt;
 }
 
-// statement -> exprStmt | printStmt | block
+// statement -> exprStmt | forStmt | ifStmt | printStmt | whileStmt | block ;
 static Stmt* statement(Parser* parser) {
+    if (match(parser, TOKEN_FOR)) {
+        return forStatement(parser);
+    }
     if (match(parser, TOKEN_IF)) {
         return ifStatement(parser);
     }
     if (match(parser, TOKEN_PRINT)) {
         return printStatement(parser);
+    }
+    if (match(parser, TOKEN_WHILE)) {
+        return whileStatement(parser);
     }
     if (check(parser, TOKEN_LEFT_BRACE)) {
         StmtList* blockStmts = block(parser); // block() handles {} and returns list
@@ -217,16 +227,69 @@ static Stmt* statement(Parser* parser) {
     return expressionStatement(parser);
 }
 
+// forStmt -> "for" "(" ( varDecl | exprStmt | ";" ) expression? ";" expression? ")" statement ;
+static Stmt* forStatement(Parser* parser) {
+    Token leftParen = consume(parser, TOKEN_LEFT_PAREN, "Expect '(' after 'for'.");
+    if (parser->hadError || leftParen.type == TOKEN_ERROR) return NULL;
+
+    Stmt* initializer;
+    if (match(parser, TOKEN_SEMICOLON)) {
+        initializer = NULL;
+    } else if (match(parser, TOKEN_VAR)) {
+        initializer = varDeclaration(parser);
+        if (parser->hadError) return NULL;
+    } else {
+        initializer = expressionStatement(parser);
+        if (parser->hadError) return NULL;
+    }
+
+    Expr* condition = NULL;
+    if (!check(parser, TOKEN_SEMICOLON)) {
+        condition = expression(parser);
+        if (parser->hadError) return NULL;
+    }
+    consume(parser, TOKEN_SEMICOLON, "Expect ';' after loop condition.");
+    if (parser->hadError) return NULL;
+
+    Expr* increment = NULL;
+    if (!check(parser, TOKEN_RIGHT_PAREN)) {
+        increment = expression(parser);
+        if (parser->hadError) return NULL;
+    }
+    consume(parser, TOKEN_RIGHT_PAREN, "Expect ')' after for clauses.");
+    if (parser->hadError) return NULL;
+
+    Stmt* body = statement(parser);
+    if (parser->hadError) return NULL;
+
+    if (increment != NULL) {
+        StmtList* incrNode = newStmtList(newExpressionStmt(increment), NULL);
+        body = newBlockStmt(newStmtList(body, incrNode));
+    }
+
+    if (condition == NULL) {
+        condition = newLiteralBooleanExpr(true);
+    }
+    body = newWhileStmt(condition, body);
+
+    if (initializer != NULL) {
+        StmtList* bodyNode = newStmtList(body, NULL);
+        body = newBlockStmt(newStmtList(initializer, bodyNode));
+    }
+
+    return body;
+}
+
 // ifStmt -> "if" "(" expression ")" statement ( "else" statement )?
 static Stmt* ifStatement(Parser* parser) {
     Token leftParen = consume(parser, TOKEN_LEFT_PAREN, "Expect '(' after 'if'.");
-    if (leftParen.type == TOKEN_ERROR)
+    if (parser->hadError || leftParen.type == TOKEN_ERROR)
         return NULL; // Error consuming left parenthesis
     Expr* condition = expression(parser);
     if (parser->hadError)
         return NULL; // Propagate error
     Token rightParen = consume(parser, TOKEN_RIGHT_PAREN, "Expect ')' after if condition.");
-    if (rightParen.type == TOKEN_ERROR)
+    if (parser->hadError || rightParen.type == TOKEN_ERROR)
         return NULL; // Error consuming right parenthesis
 
     Stmt* thenBranch = statement(parser);
@@ -250,6 +313,20 @@ static Stmt* printStatement(Parser* parser) {
     Token semicolon = consume(parser, TOKEN_SEMICOLON, "Expect ';' after print value.");
     if (semicolon.type == TOKEN_ERROR) return NULL; // Error consuming semicolon
     return newPrintStmt(value);
+}
+
+// whileStmt -> "while" "(" expression ")" statement ;
+static Stmt* whileStatement(Parser* parser) {
+    Token leftParen = consume(parser, TOKEN_LEFT_PAREN, "Expect '(' after 'while'.");
+    if (parser->hadError || leftParen.type == TOKEN_ERROR) return NULL; // Error consuming parenthesis
+    Expr* condition = expression(parser);
+    if (parser->hadError) return NULL;
+    Token rightParen = consume(parser, TOKEN_RIGHT_PAREN, "Expect ')' after condition.");
+    if (parser->hadError || rightParen.type == TOKEN_ERROR) return NULL; // Error consuming parenthesis
+    Stmt* body = statement(parser);
+    if (parser->hadError) return NULL;
+
+    return newWhileStmt(condition, body);
 }
 
 // exprStmt -> expression
@@ -344,11 +421,11 @@ static Expr* expression(Parser* parser) {
     return assignment(parser); // Use assignment as the top-level expression rule
 }
 
-// assignment -> IDENTIFIER "=" assignment | equality ;
+// assignment -> IDENTIFIER "=" assignment | logic_or ;
 // eg: a = b = c;
 static Expr* assignment(Parser* parser) {
     // Parse the LHS. It might be an identifier, or something else.
-    Expr* expr = equality(parser);
+    Expr* expr = or(parser);
     if (parser->hadError) return NULL;
 
     if (match(parser, TOKEN_EQUAL)) {
@@ -372,7 +449,43 @@ static Expr* assignment(Parser* parser) {
         }
     }
 
-    // If no '=' was matched, just return the expression parsed by equality()
+    // If no '=' was matched, just return the expression parsed by or()
+    return expr;
+}
+
+// logic_or -> logic_and ( "or" logic_and )* ;
+static Expr* or(Parser* parser) {
+    Expr* expr = and(parser);
+    if (parser->hadError) return NULL;
+
+    while (match(parser, TOKEN_OR)) {
+        Token oper = previous(parser);
+        Expr* right = and(parser);
+        if (parser->hadError) {
+            freeExpr(expr);
+            return NULL;
+        }
+        expr = newLogicalExpr(expr, oper, right);
+    }
+
+    return expr;
+}
+
+// logic_and -> equality ( "and" equality )* ;
+static Expr* and(Parser* parser) {
+    Expr* expr = equality(parser);
+    if (parser->hadError) return NULL;
+
+    while (match(parser, TOKEN_AND)) {
+        Token oper = previous(parser);
+        Expr* right = equality(parser);
+        if (parser->hadError) {
+            freeExpr(expr);
+            return NULL;
+        }
+        expr = newLogicalExpr(expr, oper, right);
+    }
+
     return expr;
 }
 

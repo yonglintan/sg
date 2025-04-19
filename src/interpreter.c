@@ -106,6 +106,12 @@ static void executeStmt(Stmt* stmt) {
             // strings)
             break;
         }
+        case STMT_WHILE: {
+            while (isTruthy(evaluateExpr(stmt->as.whileStmt.condition))) {
+                executeStmt(stmt->as.whileStmt.body);
+            }
+            break;
+        }
         case STMT_VAR: {
             Value value = NIL_VAL; // Default value
             if (stmt->as.var.initializer != NULL) {
@@ -210,6 +216,22 @@ static Value evaluateExpr(Expr* expr) {
                                  "Interpreter error: Unknown literal token.");
                     return NIL_VAL;
             }
+        }
+        case EXPR_LOGICAL: {
+            Value left = evaluateExpr(expr->as.logical.left);
+            if (runtimeErrorOccurred) return NIL_VAL;
+            switch (expr->as.logical.oper.type) {
+                case TOKEN_OR:
+                    if (isTruthy(left)) return left;
+                    break;
+                case TOKEN_AND:
+                    if (!isTruthy(left)) return left;
+                    break;
+                default:
+                    runtimeError(&expr->as.logical.oper, "Interpreter error: Unknown logical op.");
+                    return NIL_VAL;
+            }
+            return evaluateExpr(expr->as.logical.right);
         }
         case EXPR_GROUPING: {
             return evaluateExpr(expr->as.grouping.expression);
