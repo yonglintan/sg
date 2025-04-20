@@ -8,6 +8,7 @@
 #include "object.h"
 #include "parser.h"
 #include "scanner.h"
+#include "resolver.h"
 
 static bool hadScanParseError = false;
 
@@ -107,6 +108,14 @@ static void run(const char *source) {
     initParser(&parser, tokens, tokenCount);
     StmtList *statements = parse(&parser);
 
+    // debugging
+    if (statements == NULL) {
+        printf("Parser returned NULL (parse error or empty input).\n");
+        freeTokens(tokens, tokenCount);
+        return;
+    }
+
+    resolve(NULL, statements);
     // Stop if there was a syntax error during parsing.
     if (hadParserError(&parser)) {
         hadScanParseError = true;
