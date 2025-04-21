@@ -18,7 +18,7 @@ Sing is a simple, C-inspired language that uses Singlish colloquialisms as keywo
 
 ### Prerequisites
 
-- A C compiler (like `gcc` or `clang`)
+- A C compiler (`gcc` preferred)
 - `make` build tool
 
 ### Building
@@ -29,7 +29,7 @@ Sing is a simple, C-inspired language that uses Singlish colloquialisms as keywo
     ```bash
     make
     ```
-    This will compile the source code and place the executable (`sg` or `sg.exe`) in the `build/` directory.
+    This will compile the source code and place the executable (`sing` or `sing.exe`) in the `build/` directory.
 
 ### Running
 
@@ -39,9 +39,12 @@ You can run Sing as a REPL or to run script files by running the built executabl
 
     ```bash
     make repl  # or alternatively run the sg executable `./build/sg`
+    > // We are now in the Sing REPL
+    > // This is a comment in the sing lang
     > chope x = 10 lah // Example command
     > print x + 5 lah // Example command
     15
+    > exit() // Exit the REPL
     ```
 
 2.  **Running a Script File:** Pass the path to a `.sg` file as an argument.
@@ -63,7 +66,7 @@ You can run Sing as a REPL or to run script files by running the built executabl
 
 ## Example
 
-```sing
+```
 chope a = 1 lah
 chope b = 2; // Semicolons can also be used to terminate lines
 print a + b lah // Output: 3
