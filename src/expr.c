@@ -58,7 +58,7 @@ Expr* newLiteralNumberExpr(double value) {
 Expr* newLiteralBooleanExpr(bool value) {
     Expr* expr = allocateExpr(EXPR_LITERAL);
     if (expr == NULL) return NULL;
-    expr->as.literal.type = value ? TOKEN_TRUE : TOKEN_FALSE;
+    expr->as.literal.type = value ? TOKEN_CORRECT : TOKEN_WRONG;
     expr->as.literal.value.boolean = value;
     return expr;
 }
@@ -239,9 +239,9 @@ void printExprInternal(StringBuilder* sb, Expr* expr) {
                 case TOKEN_NIL:
                     appendString(sb, "nil");
                     break;
-                case TOKEN_TRUE:
-                case TOKEN_FALSE:
-                    appendString(sb, expr->as.literal.value.boolean ? "true" : "false");
+                case TOKEN_CORRECT:
+                case TOKEN_WRONG:
+                    appendString(sb, expr->as.literal.value.boolean ? "correct" : "wrong");
                     break;
                 case TOKEN_NUMBER: {
                     char buffer[32];
@@ -363,11 +363,11 @@ static void printExprRecursive(Expr* expr, char* buffer, size_t* pos, size_t cap
                 case TOKEN_STRING:
                     written = snprintf(buffer + *pos, capacity - *pos, "\"%s\"", expr->as.literal.value.string);
                     break;
-                case TOKEN_TRUE:
-                    written = snprintf(buffer + *pos, capacity - *pos, "true");
+                case TOKEN_CORRECT:
+                    written = snprintf(buffer + *pos, capacity - *pos, "correct");
                     break;
-                case TOKEN_FALSE:
-                    written = snprintf(buffer + *pos, capacity - *pos, "false");
+                case TOKEN_WRONG:
+                    written = snprintf(buffer + *pos, capacity - *pos, "wrong");
                     break;
                 case TOKEN_NIL:
                     written = snprintf(buffer + *pos, capacity - *pos, "nil");

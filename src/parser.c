@@ -145,6 +145,10 @@ static bool match(Parser* parser, TokenType type) {
 }
 
 static Token consume(Parser* parser, TokenType type, const char* message) {
+    if (type == TOKEN_SEMICOLON && check(parser, TOKEN_LAH)) {
+        return advance(parser);
+    }
+
     // message = error message
     if (check(parser, type)) return advance(parser);
     errorAtCurrent(parser, message);
@@ -163,10 +167,10 @@ static void synchronize(Parser* parser) {
 
         switch (peek(parser).type) {
             case TOKEN_CLASS:
-            case TOKEN_FUN:
-            case TOKEN_VAR:
+            case TOKEN_HOWDO:
+            case TOKEN_GOT:
             case TOKEN_FOR:
-            case TOKEN_IF:
+            case TOKEN_CAN:
             case TOKEN_WHILE:
             case TOKEN_PRINT:
             case TOKEN_RETURN:
@@ -184,9 +188,9 @@ static void synchronize(Parser* parser) {
 // declaration -> funDecl | varDecl | statement
 static Stmt* declaration(Parser* parser) {
     Stmt* stmt = NULL;
-    if (match(parser, TOKEN_FUN)) {
-        stmt = function(parser, "function");
-    } else if (match(parser, TOKEN_VAR)) {
+    if (match(parser, TOKEN_HOWDO)) {
+        stmt = function(parser, "howdo");
+    } else if (match(parser, TOKEN_GOT)) {
         stmt = varDeclaration(parser);
     } else {
         stmt = statement(parser);
@@ -265,7 +269,7 @@ static Stmt* statement(Parser* parser) {
     if (match(parser, TOKEN_FOR)) {
         return forStatement(parser);
     }
-    if (match(parser, TOKEN_IF)) {
+    if (match(parser, TOKEN_CAN)) {
         return ifStatement(parser);
     }
     if (match(parser, TOKEN_PRINT)) {
@@ -298,7 +302,7 @@ static Stmt* forStatement(Parser* parser) {
     Stmt* initializer;
     if (match(parser, TOKEN_SEMICOLON)) {
         initializer = NULL;
-    } else if (match(parser, TOKEN_VAR)) {
+    } else if (match(parser, TOKEN_GOT)) {
         initializer = varDeclaration(parser);
         if (parser->hadError) return NULL;
     } else {
@@ -375,7 +379,7 @@ static Stmt* ifStatement(Parser* parser) {
         return NULL;
     }
     Stmt* elseBranch = NULL;
-    if (match(parser, TOKEN_ELSE)) {
+    if (match(parser, TOKEN_CANNOT)) {
         elseBranch = statement(parser);
         if (parser->hadError)
             return NULL;
@@ -718,8 +722,8 @@ static Expr* finishCall(Parser* parser, Expr* callee) {
 
 // primary -> NUMBER | STRING | "true" | "false" | "nil" | IDENTIFIER | "(" expression ")" ;
 static Expr* primary(Parser* parser) {
-    if (match(parser, TOKEN_FALSE)) return newLiteralBooleanExpr(false);
-    if (match(parser, TOKEN_TRUE)) return newLiteralBooleanExpr(true);
+    if (match(parser, TOKEN_WRONG)) return newLiteralBooleanExpr(false);
+    if (match(parser, TOKEN_CORRECT)) return newLiteralBooleanExpr(true);
     if (match(parser, TOKEN_NIL)) return newLiteralNilExpr();
 
     if (match(parser, TOKEN_NUMBER)) {

@@ -302,9 +302,9 @@ static Value evaluateExpr(Expr* expr) {
                     }
                     return OBJ_VAL(stringObj);
                 }
-                case TOKEN_TRUE:
+                case TOKEN_CORRECT:
                     return BOOL_VAL(true);
-                case TOKEN_FALSE:
+                case TOKEN_WRONG:
                     return BOOL_VAL(false);
                 case TOKEN_NIL:
                     return NIL_VAL;
