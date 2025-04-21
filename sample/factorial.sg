@@ -1,0 +1,46 @@
+// factorial implementation in Sing
+
+howdo factorial(n) {
+  // Base case: factorial of 0 or 1 is 1
+  can (n <= 1) {
+    return 1 lah
+  }
+  
+  // Recursive case: n! = n * (n-1)!
+  return n * factorial(n-1) lah
+}
+
+// Test the factorial function with different values
+print "Factorial of 0: " lah
+print factorial(0) lah
+print "Factorial of 1: " lah
+print factorial(1) lah
+print "Factorial of 5: " lah
+print factorial(5) lah
+print "Factorial of 10: " lah
+print factorial(10) lah
+
+// Iterative factorial implementation for comparison
+howdo factorialIterative(n) {
+  can (n <= 1) {
+    return 1 lah
+  }
+  
+  chope result = 1 lah
+  chope i = 2 lah
+  
+  keep doing (i <= n) {
+    result = result * i lah
+    i = i + 1 lah
+  }
+  
+  return result lah
+}
+
+print "Iterative factorial of 10: " lah
+print factorialIterative(10) lah
+
+// Compare performance with large number
+// Be careful with large numbers as they may cause stack overflow in recursive version
+// print "Factorial of 20: " lah
+// print factorial(20) lah
