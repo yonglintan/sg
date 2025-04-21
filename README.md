@@ -53,7 +53,7 @@ You can run Sing as a REPL or to run script files by running the built executabl
     ./build/sg path/to/your/script.sg
     ```
 
-    Sample scripts can be found in the `bin/samples/` directory.
+    Sample scripts can be found in the `tests/` directory.
 
 ## Project Structure
 
