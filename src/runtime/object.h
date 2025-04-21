@@ -1,7 +1,7 @@
 #ifndef sg_object_h
 #define sg_object_h
 
-#include "stmt.h"
+#include "../ast/stmt.h"
 #include <stdbool.h>
 #include <stddef.h>
 

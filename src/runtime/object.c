@@ -1,7 +1,7 @@
 #include "object.h"
 
-#include "environment.h"
-#include "stmt.h"
+#include "../ast/stmt.h"
+#include "../backend/environment.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

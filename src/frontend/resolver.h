@@ -1,7 +1,7 @@
 #ifndef sg_resolver_h
 #define sg_resolver_h
 
-#include "stmt.h"
+#include "../ast/stmt.h"
 
 typedef struct Interpreter Interpreter;
 

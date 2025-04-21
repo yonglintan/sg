@@ -1,10 +1,10 @@
 #ifndef sg_interpreter_h
 #define sg_interpreter_h
 
-#include "expr.h"
-#include "stmt.h"
-#include "object.h"
-#include "scanner.h"
+#include "../ast/expr.h"
+#include "../ast/stmt.h"
+#include "../runtime/object.h"
+#include "../frontend/scanner.h"
 #include <stdbool.h>
 
 // Structure to hold runtime error info (optional but good practice)
