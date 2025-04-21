@@ -269,7 +269,7 @@ static Token scanToken(Scanner* scanner) {
     }
 
     char errorMsg[64];
-    snprintf(errorMsg, sizeof(errorMsg), "Unexpected character: '%c'", c);
+    snprintf(errorMsg, sizeof(errorMsg), "Aiyo dont anyhow put character: '%c'", c);
     return errorToken(scanner, errorMsg);
 }
 

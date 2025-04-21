@@ -504,8 +504,8 @@ static Value visitCallExpr(Expr* expr) {
 
         if (expr->as.call.arg_count != function->arity) {
             char error[100];
-            sprintf(error, "Expected %d arguments but got %d.",
-                   function->arity, expr->as.call.arg_count);
+            sprintf(error, "Eh hello, suppose to get %d argument(s) but you give %d only leh.",
+                function->arity, expr->as.call.arg_count);
             runtimeError(&expr->as.call.paren, error);
             free(arguments);
             return NIL_VAL;
@@ -520,7 +520,7 @@ static Value visitCallExpr(Expr* expr) {
 
         if (expr->as.call.arg_count != native->arity) {
             char error[100];
-            sprintf(error, "Expected %d arguments but got %d.",
+            sprintf(error, "Eh hello, suppose to get %d argument(s) but you give %d only leh.",
                    native->arity, expr->as.call.arg_count);
             runtimeError(&expr->as.call.paren, error);
             free(arguments);
