@@ -1,9 +1,9 @@
 #ifndef parser_h
 #define parser_h
 
+#include "../ast/expr.h"
+#include "../ast/stmt.h"
 #include "scanner.h"
-#include "expr.h"
-#include "stmt.h"
 
 typedef struct {
     Token* tokens;
@@ -19,4 +19,4 @@ StmtList* parse(Parser* parser);
 
 bool hadParserError(Parser* parser);
 
-#endif 
+#endif

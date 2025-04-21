@@ -3,12 +3,12 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "environment.h"
-#include "interpreter.h"
-#include "object.h"
-#include "parser.h"
-#include "resolver.h"
-#include "scanner.h"
+#include "backend/environment.h"
+#include "backend/interpreter.h"
+#include "frontend/parser.h"
+#include "frontend/resolver.h"
+#include "frontend/scanner.h"
+#include "runtime/object.h"
 
 static bool hadScanParseError = false;
 

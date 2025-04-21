@@ -2,7 +2,7 @@
 #define stmt_h
 
 #include "expr.h"
-#include "scanner.h"
+#include "../frontend/scanner.h"
 
 typedef enum {
     STMT_EXPRESSION,

@@ -1,7 +1,7 @@
 #include "parser.h"
-#include "expr.h"
+#include "../ast/expr.h"
+#include "../ast/stmt.h"
 #include "scanner.h"
-#include "stmt.h"
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -9,8 +9,8 @@
 
 static Expr* expression(Parser* parser);
 static Expr* assignment(Parser* parser);
-static Expr* or(Parser* parser);
-static Expr* and(Parser* parser);
+static Expr* or (Parser * parser);
+static Expr* and (Parser * parser);
 static Expr* equality(Parser* parser);
 static Expr* comparison(Parser* parser);
 static Expr* term(Parser* parser);
@@ -506,7 +506,7 @@ static Expr* expression(Parser* parser) {
 // eg: a = b = c;
 static Expr* assignment(Parser* parser) {
     // Parse the LHS. It might be an identifier, or something else.
-    Expr* expr = or(parser);
+    Expr* expr = or (parser);
     if (parser->hadError) return NULL;
 
     if (match(parser, TOKEN_EQUAL)) {
@@ -535,7 +535,7 @@ static Expr* assignment(Parser* parser) {
 }
 
 // logic_or -> logic_and ( "or" logic_and )* ;
-static Expr* or(Parser* parser) {
+static Expr* or (Parser * parser) {
     Expr* expr = and(parser);
     if (parser->hadError) return NULL;
 
@@ -553,7 +553,7 @@ static Expr* or(Parser* parser) {
 }
 
 // logic_and -> equality ( "and" equality )* ;
-static Expr* and(Parser* parser) {
+static Expr* and (Parser * parser) {
     Expr* expr = equality(parser);
     if (parser->hadError) return NULL;
 
