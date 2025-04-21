@@ -12,14 +12,14 @@
 // Helper to initialize the entry array within an environment
 static void initEntries(Environment* environment, int capacity) {
     // printf("Initializing environment entries with capacity: %d\n", capacity);
-    
+
     environment->entries = ALLOCATE(Entry, capacity);
     // Check allocation success
     if (environment->entries == NULL && capacity > 0) {
-         fprintf(stderr, "Memory error: Cannot allocate environment entries.\n");
-         environment->capacity = 0; // Mark as invalid
-         environment->count = 0;
-         return;
+        fprintf(stderr, "Memory problem lah: Cannot allocate environment entries leh.\n");
+        environment->capacity = 0; // Mark as invalid
+        environment->count = 0;
+        return;
     }
     environment->capacity = capacity;
     environment->count = 0;
@@ -35,7 +35,7 @@ static void initEntries(Environment* environment, int capacity) {
 Environment* newEnvironment() {
     Environment* environment = ALLOCATE(Environment, 1);
     if (environment == NULL) {
-        fprintf(stderr, "Memory error: Cannot allocate environment.\n");
+        fprintf(stderr, "Memory problem lah: Cannot allocate environment sia.\n");
         return NULL;
     }
     initEntries(environment, INITIAL_CAPACITY);
@@ -51,7 +51,7 @@ Environment* newEnvironment() {
 Environment* newEnclosedEnvironment(Environment* enclosing) {
     Environment* environment = ALLOCATE(Environment, 1);
     if (environment == NULL) {
-         fprintf(stderr, "Memory error: Cannot allocate enclosed environment.\n");
+        fprintf(stderr, "Memory problem lah: Cannot allocate enclosed environment ok?\n");
         return NULL;
     }
     initEntries(environment, INITIAL_CAPACITY);
@@ -88,7 +88,7 @@ static bool growCapacity(Environment* environment) {
     Entry* newEntries = REALLOCATE(Entry, environment->entries, oldCapacity, newCapacity);
 
     if (newEntries == NULL) {
-         fprintf(stderr, "Memory error: Cannot reallocate environment entries.\n");
+        fprintf(stderr, "Memory problem lah: Cannot reallocate environment entries one leh.\n");
         return false;
     }
 
@@ -127,8 +127,8 @@ bool environmentDefine(Environment* environment, const char* name, Value value) 
     // Add the new variable
     char* nameCopy = ALLOCATE(char, strlen(name) + 1);
     if (nameCopy == NULL) {
-         fprintf(stderr, "Memory error: Cannot allocate variable name copy.\n");
-         return false;
+        fprintf(stderr, "Memory problem lah: Cannot allocate variable name copy ok?.\n");
+        return false;
     }
     strcpy(nameCopy, name);
 
@@ -154,7 +154,7 @@ bool environmentGet(Environment* environment, Token* nameToken, Value* outValue)
 
     char* name = tokenToString(nameToken);
     if (name == NULL) {
-        fprintf(stderr, "Memory error processing variable name token.\n");
+        fprintf(stderr, "Memory problem lah: Got issue when processing variable name token sia.\n");
         return false;
     }
 
@@ -187,7 +187,7 @@ bool environmentAssign(Environment* environment, Token* nameToken, Value value) 
 
      char* name = tokenToString(nameToken);
      if (name == NULL) {
-        fprintf(stderr, "Memory error processing variable name token for assignment.\n");
+        fprintf(stderr, "Memory problem lah: Processing variable name token for assignment also got problem leh.\n");
         return false;
      }
 
@@ -211,4 +211,4 @@ bool environmentAssign(Environment* environment, Token* nameToken, Value value) 
     printf("Variable '%s' not found in any scope for assignment.\n", name);
     free(name);
     return false;
-} 
+}

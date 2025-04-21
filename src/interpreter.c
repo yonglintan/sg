@@ -39,8 +39,7 @@ void initInterpreter() {
     if (globalEnvironment == NULL) {
         globalEnvironment = newEnvironment();
         if (globalEnvironment == NULL) {
-            fprintf(stderr,
-                    "Fatal: Could not initialize global environment.\n");
+            fprintf(stderr, "Aiyo die already lah: Global environment jialat, cannot init!\n");
             exit(74);
         }
 
@@ -70,7 +69,7 @@ void runtimeError(Token* token, const char* format, ...) {
     if (runtimeErrorOccurred) return; // Report only the first error
     runtimeErrorOccurred = true;
 
-    fprintf(stderr, "[line %d] Runtime Error", token ? token->line : 0);
+    fprintf(stderr, "[line %d] Wah piang! Runtime problem here lah", token ? token->line : 0);
     fprintf(stderr, ": ");
 
     va_list args;
@@ -169,7 +168,7 @@ static void executeStmt(Stmt* stmt) {
                 runtimeError(&stmt->as.function.name, "Memory error creating function.");
                 return;
             }
-            
+
             char* name = malloc(stmt->as.function.name.length + 1);
             if (name == NULL) {
                 runtimeError(&stmt->as.function.name, "Memory error processing function name.");
@@ -177,7 +176,7 @@ static void executeStmt(Stmt* stmt) {
             }
             strncpy(name, stmt->as.function.name.start, stmt->as.function.name.length);
             name[stmt->as.function.name.length] = '\0';
-            
+
             environmentDefine(currentEnvironment, name, OBJ_VAL(function));
             free(name);
             break;
@@ -188,7 +187,7 @@ static void executeStmt(Stmt* stmt) {
                 value = evaluateExpr(stmt->as.return_stmt.value);
                 if (runtimeErrorOccurred) return;
             }
-            
+
             had_return = true;
             return_value = value;
             break;
@@ -224,11 +223,11 @@ static Value callFunction(ObjFunction* function, Value* arguments, int arg_count
         runtimeError(NULL, "Memory error creating function environment.");
         return NIL_VAL;
     }
-    
+
     // Bind arguments to parameters
     for (int i = 0; i < function->declaration->as.function.param_count; i++) {
         Token param = function->declaration->as.function.params[i];
-        
+
         char* name = malloc(param.length + 1);
         if (name == NULL) {
             runtimeError(&param, "Memory error processing parameter name.");
@@ -237,26 +236,26 @@ static Value callFunction(ObjFunction* function, Value* arguments, int arg_count
         }
         strncpy(name, param.start, param.length);
         name[param.length] = '\0';
-        
+
         environmentDefine(environment, name, arguments[i]);
         free(name);
     }
-    
+
     Environment* previous = currentEnvironment;
     currentEnvironment = environment;
-    
+
     had_return = false;
-    
+
     executeBlock(function->declaration->as.function.body, environment);
-    
+
     currentEnvironment = previous;
-    
+
     if (had_return) {
         Value result = return_value;
         had_return = false;
         return result;
     }
-    
+
     return NIL_VAL;
 }
 
@@ -485,13 +484,13 @@ static Value evaluateExpr(Expr* expr) {
 static Value visitCallExpr(Expr* expr) {
     Value callee = evaluateExpr(expr->as.call.callee);
     if (runtimeErrorOccurred) return NIL_VAL;
-    
+
     Value* arguments = malloc(sizeof(Value) * expr->as.call.arg_count);
     if (arguments == NULL && expr->as.call.arg_count > 0) {
         runtimeError(&expr->as.call.paren, "Memory error evaluating function arguments.");
         return NIL_VAL;
     }
-    
+
     for (int i = 0; i < expr->as.call.arg_count; i++) {
         arguments[i] = evaluateExpr(expr->as.call.arguments[i]);
         if (runtimeErrorOccurred) {
@@ -499,39 +498,39 @@ static Value visitCallExpr(Expr* expr) {
             return NIL_VAL;
         }
     }
-    
+
     if (IS_OBJ(callee) && OBJ_TYPE(callee) == OBJ_FUNCTION) {
         ObjFunction* function = (ObjFunction*)AS_OBJ(callee);
-        
+
         if (expr->as.call.arg_count != function->arity) {
             char error[100];
-            sprintf(error, "Expected %d arguments but got %d.", 
+            sprintf(error, "Expected %d arguments but got %d.",
                    function->arity, expr->as.call.arg_count);
             runtimeError(&expr->as.call.paren, error);
             free(arguments);
             return NIL_VAL;
         }
-        
+
         Value result = callFunction(function, arguments, expr->as.call.arg_count);
         free(arguments);
         return result;
-    } 
+    }
     else if (IS_OBJ(callee) && OBJ_TYPE(callee) == OBJ_NATIVE) {
         ObjNative* native = (ObjNative*)AS_OBJ(callee);
-        
+
         if (expr->as.call.arg_count != native->arity) {
             char error[100];
-            sprintf(error, "Expected %d arguments but got %d.", 
+            sprintf(error, "Expected %d arguments but got %d.",
                    native->arity, expr->as.call.arg_count);
             runtimeError(&expr->as.call.paren, error);
             free(arguments);
             return NIL_VAL;
         }
-        
+
         Value result = native->function(NULL, expr->as.call.arg_count, arguments);
         free(arguments);
         return result;
-    } 
+    }
     else {
         runtimeError(&expr->as.call.paren, "Can only call functions.");
         free(arguments);

@@ -18,9 +18,9 @@ void* reallocate(void* pointer, size_t oldSize, size_t newSize) {
     // check if reallocation failed
     if (result == NULL) {
         // todo: better handling?
-        fprintf(stderr, "Fatal: Memory allocation failed! (realloc returned NULL)\n");
+        fprintf(stderr, "Aiyo die already lah: Memory allocation fail leh! realloc return NULL sia...\n");
         exit(1); // exit if memory cannot be allocated/reallocated
     }
 
     return result;
-} 
+}

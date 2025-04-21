@@ -92,7 +92,7 @@ static void errorAt(Parser* parser, Token token, const char* message) {
     parser->panicMode = true;
     parser->hadError = true;
 
-    fprintf(stderr, "[line %d] Error", token.line);
+    fprintf(stderr, "[line %d] Aiyo problem sia:", token.line);
 
     if (token.type == TOKEN_EOF) {
         fprintf(stderr, " at end");

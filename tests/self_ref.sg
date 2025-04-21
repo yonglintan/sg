@@ -1,3 +1,4 @@
 {
   var x = x;
+  var super_long_variable_name_that_causes_malloc_fail_due_to_some_custom_limit_blah_blah_blah = 123;
 }
