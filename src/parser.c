@@ -169,9 +169,9 @@ static void synchronize(Parser* parser) {
             case TOKEN_CLASS:
             case TOKEN_HOWDO:
             case TOKEN_GOT:
-            case TOKEN_FOR:
+            case TOKEN_DO_AGAIN_FROM:
             case TOKEN_CAN:
-            case TOKEN_WHILE:
+            case TOKEN_KEEP_DOING:
             case TOKEN_PRINT:
             case TOKEN_RETURN:
                 return; // Start parsing from the next likely statement beginning
@@ -266,7 +266,7 @@ static Stmt* function(Parser* parser, const char* kind) {
 
 // statement -> exprStmt | ifStmt | printStmt | returnStmt | block
 static Stmt* statement(Parser* parser) {
-    if (match(parser, TOKEN_FOR)) {
+    if (match(parser, TOKEN_DO_AGAIN_FROM)) {
         return forStatement(parser);
     }
     if (match(parser, TOKEN_CAN)) {
@@ -275,7 +275,7 @@ static Stmt* statement(Parser* parser) {
     if (match(parser, TOKEN_PRINT)) {
         return printStatement(parser);
     }
-    if (match(parser, TOKEN_WHILE)) {
+    if (match(parser, TOKEN_KEEP_DOING)) {
         return whileStatement(parser);
     }
     if (match(parser, TOKEN_RETURN)) {

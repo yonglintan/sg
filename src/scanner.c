@@ -160,18 +160,20 @@ static TokenType identifierType(Scanner* scanner) {
                 }
             }
             break;
+        case 'd':
+            return checkKeyword(scanner, 2, 1, "o again", TOKEN_DO_AGAIN_FROM);
         case 'f':
             if (scanner->current - scanner->start > 1) {
                 switch (scanner->start[1]) {
                     // case 'w':
                     //     return checkKeyword(scanner, 1, 4, "rong", TOKEN_WRONG);
-                    case 'o':
-                        return checkKeyword(scanner, 2, 1, "r", TOKEN_FOR);
                 }
             }
             break;
         case 'h':
             return checkKeyword(scanner, 1, 4, "owdo", TOKEN_HOWDO);
+        case 'k':
+            return checkKeyword(scanner, 2, 3, "eep doing", TOKEN_KEEP_DOING);
         case 'l':
             return checkKeyword(scanner, 1, 2, "ah", TOKEN_LAH);
         case 'n':
@@ -200,8 +202,6 @@ static TokenType identifierType(Scanner* scanner) {
         case 'w':
             if (scanner->current - scanner->start > 1) {
                 switch (scanner->start[1]) {
-                    case 'h':
-                        return checkKeyword(scanner, 2, 3, "ile", TOKEN_WHILE);
                     case 'r':
                         return checkKeyword(scanner, 2, 3, "ong", TOKEN_WRONG);
                 }
@@ -225,6 +225,28 @@ static Token scanToken(Scanner* scanner) {
     scanner->start = scanner->current;
 
     if (isAtEnd(scanner)) return makeToken(scanner, TOKEN_EOF);
+
+    // check for multi-word keywords
+    const char* curr = scanner->current;
+    int remaining = 0;
+
+    remaining = 0;
+    while (curr[remaining] != '\0')
+        remaining++;
+
+    if (remaining >= 10 && strncmp(curr, "keep", 4) == 0 && curr[4] == ' ' && strncmp(curr + 5, "doing", 5) == 0 && (curr[10] == '\0' || !isAlphaNumeric(curr[10]))) {
+        scanner->current += 10;
+        return makeToken(scanner, TOKEN_KEEP_DOING);
+    }
+
+    remaining = 0;
+    while (curr[remaining] != '\0')
+        remaining++;
+
+    if (remaining >= 13 && strncmp(curr, "do", 2) == 0 && curr[2] == ' ' && strncmp(curr + 3, "again", 5) == 0 && curr[8] == ' ' && strncmp(curr + 9, "from", 4) == 0 && (curr[13] == '\0' || !isAlphaNumeric(curr[13]))) {
+        scanner->current += 13;
+        return makeToken(scanner, TOKEN_DO_AGAIN_FROM);
+    }
 
     char c = advance(scanner);
 
@@ -382,8 +404,8 @@ void printToken(Token token) {
         case TOKEN_WRONG:
             printf("WRONG");
             break;
-        case TOKEN_FOR:
-            printf("FOR");
+        case TOKEN_DO_AGAIN_FROM:
+            printf("DO AGAIN FROM");
             break;
         case TOKEN_HOWDO:
             printf("HOWDO");
@@ -415,8 +437,8 @@ void printToken(Token token) {
         case TOKEN_GOT:
             printf("GOT");
             break;
-        case TOKEN_WHILE:
-            printf("WHILE");
+        case TOKEN_KEEP_DOING:
+            printf("KEEP DOING");
             break;
         case TOKEN_ERROR:
             printf("ERROR");
