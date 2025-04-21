@@ -1,8 +1,8 @@
 #ifndef sg_environment_h
 #define sg_environment_h
 
-#include "object.h"  
-#include "scanner.h"
+#include "../runtime/object.h"  
+#include "../frontend/scanner.h"
 
 // forward declare environment struct for the pointer in itself
 typedef struct Environment Environment;

@@ -1,5 +1,5 @@
 #include "expr.h"
-#include "memory.h"
+#include "../runtime/memory.h"
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stdio.h>

@@ -6,12 +6,12 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "../ast/expr.h"
+#include "../ast/stmt.h"
+#include "../frontend/scanner.h"
+#include "../runtime/memory.h"
+#include "../runtime/object.h"
 #include "environment.h"
-#include "expr.h"
-#include "memory.h"
-#include "object.h"
-#include "scanner.h"
-#include "stmt.h"
 #include <time.h>
 
 // --- Global State ---
@@ -31,8 +31,6 @@ static void checkNumberOperands(Token* operatorToken, Value left, Value right);
 static Value callFunction(ObjFunction* function, Value* arguments, int arg_count);
 static Value visitCallExpr(Expr* expr);
 static Value clockNative(struct Interpreter* interpreter, int arg_count, Value* args);
-
-
 
 // --- Interpreter Initialization and Cleanup ---
 void initInterpreter() {
@@ -214,7 +212,6 @@ static void executeBlock(StmtList* statements, Environment* environment) {
     currentEnvironment = previousEnvironment;
     freeEnvironment(environment);
 }
-
 
 static Value callFunction(ObjFunction* function, Value* arguments, int arg_count) {
     (void)arg_count;
@@ -505,7 +502,7 @@ static Value visitCallExpr(Expr* expr) {
         if (expr->as.call.arg_count != function->arity) {
             char error[100];
             sprintf(error, "Eh hello, suppose to get %d argument(s) but you give %d only leh.",
-                function->arity, expr->as.call.arg_count);
+                    function->arity, expr->as.call.arg_count);
             runtimeError(&expr->as.call.paren, error);
             free(arguments);
             return NIL_VAL;
@@ -514,14 +511,13 @@ static Value visitCallExpr(Expr* expr) {
         Value result = callFunction(function, arguments, expr->as.call.arg_count);
         free(arguments);
         return result;
-    }
-    else if (IS_OBJ(callee) && OBJ_TYPE(callee) == OBJ_NATIVE) {
+    } else if (IS_OBJ(callee) && OBJ_TYPE(callee) == OBJ_NATIVE) {
         ObjNative* native = (ObjNative*)AS_OBJ(callee);
 
         if (expr->as.call.arg_count != native->arity) {
             char error[100];
             sprintf(error, "Eh hello, suppose to get %d argument(s) but you give %d only leh.",
-                   native->arity, expr->as.call.arg_count);
+                    native->arity, expr->as.call.arg_count);
             runtimeError(&expr->as.call.paren, error);
             free(arguments);
             return NIL_VAL;
@@ -530,8 +526,7 @@ static Value visitCallExpr(Expr* expr) {
         Value result = native->function(NULL, expr->as.call.arg_count, arguments);
         free(arguments);
         return result;
-    }
-    else {
+    } else {
         runtimeError(&expr->as.call.paren, "Can only call functions.");
         free(arguments);
         return NIL_VAL;

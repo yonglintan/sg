@@ -1,7 +1,7 @@
 #ifndef expr_h
 #define expr_h
 
-#include "scanner.h"
+#include "../frontend/scanner.h"
 #include <stdbool.h> // Include for bool type used in LiteralExpr
 
 typedef enum {

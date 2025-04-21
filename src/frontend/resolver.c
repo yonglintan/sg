@@ -1,11 +1,10 @@
+#include "resolver.h"
+#include "../backend/environment.h"
+#include "../backend/interpreter.h"
+#include "../runtime/object.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "resolver.h"
-#include "interpreter.h"
-#include "environment.h"
-#include "object.h"
-
 
 typedef struct {
     const char* name;
@@ -42,8 +41,7 @@ static void endScope() {
 static void declare(Token name) {
     if (scopeStack == NULL) return;
     for (int i = 0; i < scopeStack->count; i++) {
-        if (strncmp(scopeStack->entries[i].name, name.start, name.length) == 0 &&
-            strlen(scopeStack->entries[i].name) == name.length) {
+        if (strncmp(scopeStack->entries[i].name, name.start, name.length) == 0 && strlen(scopeStack->entries[i].name) == name.length) {
             fprintf(stderr, "[line %d] Aiyo problem sia: This variable already declare in this scope liao.\n", name.line);
             return;
         }
@@ -60,14 +58,13 @@ static void declare(Token name) {
     memcpy(nameCopy, name.start, name.length);
     nameCopy[name.length] = '\0';
 
-    scopeStack->entries[scopeStack->count++] = (ScopeEntry){ nameCopy, false };
+    scopeStack->entries[scopeStack->count++] = (ScopeEntry) { nameCopy, false };
 }
 
 static void define(Token name) {
     if (scopeStack == NULL) return;
     for (int i = 0; i < scopeStack->count; i++) {
-        if (strncmp(scopeStack->entries[i].name, name.start, name.length) == 0 &&
-            strlen(scopeStack->entries[i].name) == name.length) {
+        if (strncmp(scopeStack->entries[i].name, name.start, name.length) == 0 && strlen(scopeStack->entries[i].name) == name.length) {
             scopeStack->entries[i].defined = true;
             return;
         }
@@ -94,7 +91,7 @@ static void resolveFunction(Interpreter* interpreter, Stmt* function) {
 }
 
 static void resolveStmt(Interpreter* interpreter, Stmt* stmt) {
-    if (stmt == NULL) return;  // defensive check
+    if (stmt == NULL) return; // defensive check
     switch (stmt->type) {
         case STMT_BLOCK:
             beginScope();
@@ -167,8 +164,7 @@ static void resolveExpr(Interpreter* interpreter, Expr* expr) {
         case EXPR_VARIABLE: {
             for (Scope* scope = scopeStack; scope != NULL; scope = scope->next) {
                 for (int i = 0; i < scope->count; i++) {
-                    if (strncmp(scope->entries[i].name, expr->as.variable.name.start, expr->as.variable.name.length) == 0 &&
-                        strlen(scope->entries[i].name) == expr->as.variable.name.length) {
+                    if (strncmp(scope->entries[i].name, expr->as.variable.name.start, expr->as.variable.name.length) == 0 && strlen(scope->entries[i].name) == expr->as.variable.name.length) {
                         if (!scope->entries[i].defined) {
                             fprintf(stderr, "[line %d] Aiyo problem sia: How to read local variable when initializing itself?\n", expr->as.variable.name.line);
                         }
