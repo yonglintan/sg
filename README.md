@@ -39,6 +39,7 @@ You can run Sing as a REPL or to run script files by running the built executabl
 
     ```bash
     make repl  # or alternatively run the sg executable `./build/sg`
+    > // We are now in the Sing REPL
     > // This is a comment in the sing lang
     > chope x = 10 lah // Example command
     > print x + 5 lah // Example command
