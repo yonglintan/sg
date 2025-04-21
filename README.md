@@ -11,6 +11,7 @@ Sing is a simple, C-inspired language that uses Singlish colloquialisms as keywo
 - Functions
 - Closures
 - Basic data types (numbers, strings, booleans, nil)
+- Dynamic typing
 - Interactive REPL (Read-Eval-Print Loop)
 
 ## Getting Started
@@ -70,7 +71,7 @@ print a + b lah // Output: 3
 if (a < b) {
   print "a is smaller lah";
 } else {
-  cetak "b is smaller or same lah";
+  print "b is smaller or same lah";
 }
 // Output: a is smaller lah
 
