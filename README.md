@@ -68,9 +68,9 @@ chope a = 1 lah
 chope b = 2; // Semicolons can also be used to terminate lines
 print a + b lah // Output: 3
 
-if (a < b) {
+can (a < b) {
   print "a is smaller lah";
-} else {
+} cannot {
   print "b is smaller or same lah";
 }
 // Output: a is smaller lah
