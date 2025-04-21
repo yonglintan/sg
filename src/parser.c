@@ -92,7 +92,7 @@ static void errorAt(Parser* parser, Token token, const char* message) {
     parser->panicMode = true;
     parser->hadError = true;
 
-    fprintf(stderr, "[line %d] Error", token.line);
+    fprintf(stderr, "[line %d] Aiyo problem sia:", token.line);
 
     if (token.type == TOKEN_EOF) {
         fprintf(stderr, " at end");
@@ -145,11 +145,15 @@ static bool match(Parser* parser, TokenType type) {
 }
 
 static Token consume(Parser* parser, TokenType type, const char* message) {
+    if (type == TOKEN_SEMICOLON && check(parser, TOKEN_LAH)) {
+        return advance(parser);
+    }
+
     // message = error message
     if (check(parser, type)) return advance(parser);
     errorAtCurrent(parser, message);
 
-    // can either return an error token or handle differently? 
+    // can either return an error token or handle differently?
     // For now, return previous potentially? idk
     return peek(parser);
 }
@@ -163,11 +167,11 @@ static void synchronize(Parser* parser) {
 
         switch (peek(parser).type) {
             case TOKEN_CLASS:
-            case TOKEN_FUN:
-            case TOKEN_VAR:
-            case TOKEN_FOR:
-            case TOKEN_IF:
-            case TOKEN_WHILE:
+            case TOKEN_HOWDO:
+            case TOKEN_CHOPE:
+            case TOKEN_DO_AGAIN_FROM:
+            case TOKEN_CAN:
+            case TOKEN_KEEP_DOING:
             case TOKEN_PRINT:
             case TOKEN_RETURN:
                 return; // Start parsing from the next likely statement beginning
@@ -184,9 +188,9 @@ static void synchronize(Parser* parser) {
 // declaration -> funDecl | varDecl | statement
 static Stmt* declaration(Parser* parser) {
     Stmt* stmt = NULL;
-    if (match(parser, TOKEN_FUN)) {
-        stmt = function(parser, "function");
-    } else if (match(parser, TOKEN_VAR)) {
+    if (match(parser, TOKEN_HOWDO)) {
+        stmt = function(parser, "howdo");
+    } else if (match(parser, TOKEN_CHOPE)) {
         stmt = varDeclaration(parser);
     } else {
         stmt = statement(parser);
@@ -203,14 +207,14 @@ static Stmt* declaration(Parser* parser) {
     return stmt;
 }
 
-// function ->  "(" parameters? ")" 
+// function ->  "(" parameters? ")"
 static Stmt* function(Parser* parser, const char* kind) {
     char message[64];
-    snprintf(message, sizeof(message), "Expect %s name.", kind);
+    snprintf(message, sizeof(message), "Where the %s name ah?", kind);
     Token name = consume(parser, TOKEN_IDENTIFIER, message);
     if (parser->hadError) return NULL;
 
-    Token leftParen = consume(parser, TOKEN_LEFT_PAREN, "Expect '(' after function name.");
+    Token leftParen = consume(parser, TOKEN_LEFT_PAREN, "Aiyo, after function name must have '(' one lah!");
     if (parser->hadError) return NULL;
 
     // Parse parameters
@@ -220,12 +224,12 @@ static Stmt* function(Parser* parser, const char* kind) {
     if (!check(parser, TOKEN_RIGHT_PAREN)) {
         do {
             if (param_count >= 255) {
-                error(parser, peek(parser), "Can't have more than 255 parameters.");
+                error(parser, peek(parser), "Walao, too many parameters sia. Max 255 can already!");
                 free(parameters);
                 return NULL;
             }
 
-            Token param = consume(parser, TOKEN_IDENTIFIER, "Expect parameter name.");
+            Token param = consume(parser, TOKEN_IDENTIFIER, "Eh where your parameter name sia?");
             if (parser->hadError) {
                 free(parameters);
                 return NULL;
@@ -233,7 +237,7 @@ static Stmt* function(Parser* parser, const char* kind) {
 
             Token* new_params = (Token*)realloc(parameters, sizeof(Token) * (param_count + 1));
             if (new_params == NULL) {
-                error(parser, param, "Memory error allocating parameters.");
+                error(parser, param, "Memory problem lah, cannot allocate for parameters ok.");
                 free(parameters);
                 return NULL;
             }
@@ -244,7 +248,7 @@ static Stmt* function(Parser* parser, const char* kind) {
         } while (match(parser, TOKEN_COMMA));
     }
 
-    Token rightParen = consume(parser, TOKEN_RIGHT_PAREN, "Expect ')' after parameters.");
+    Token rightParen = consume(parser, TOKEN_RIGHT_PAREN, "Aiyo, after parameters must close with ')' leh!");
     if (parser->hadError) {
         free(parameters);
         return NULL;
@@ -262,16 +266,16 @@ static Stmt* function(Parser* parser, const char* kind) {
 
 // statement -> exprStmt | ifStmt | printStmt | returnStmt | block
 static Stmt* statement(Parser* parser) {
-    if (match(parser, TOKEN_FOR)) {
+    if (match(parser, TOKEN_DO_AGAIN_FROM)) {
         return forStatement(parser);
     }
-    if (match(parser, TOKEN_IF)) {
+    if (match(parser, TOKEN_CAN)) {
         return ifStatement(parser);
     }
     if (match(parser, TOKEN_PRINT)) {
         return printStatement(parser);
     }
-    if (match(parser, TOKEN_WHILE)) {
+    if (match(parser, TOKEN_KEEP_DOING)) {
         return whileStatement(parser);
     }
     if (match(parser, TOKEN_RETURN)) {
@@ -292,13 +296,13 @@ static Stmt* statement(Parser* parser) {
 
 // forStmt -> "for" "(" ( varDecl | exprStmt | ";" ) expression? ";" expression? ")" statement ;
 static Stmt* forStatement(Parser* parser) {
-    Token leftParen = consume(parser, TOKEN_LEFT_PAREN, "Expect '(' after 'for'.");
+    Token leftParen = consume(parser, TOKEN_LEFT_PAREN, "After 'for' must have '(' one leh!");
     if (parser->hadError || leftParen.type == TOKEN_ERROR) return NULL;
 
     Stmt* initializer;
     if (match(parser, TOKEN_SEMICOLON)) {
         initializer = NULL;
-    } else if (match(parser, TOKEN_VAR)) {
+    } else if (match(parser, TOKEN_CHOPE)) {
         initializer = varDeclaration(parser);
         if (parser->hadError) return NULL;
     } else {
@@ -311,7 +315,7 @@ static Stmt* forStatement(Parser* parser) {
         condition = expression(parser);
         if (parser->hadError) return NULL;
     }
-    consume(parser, TOKEN_SEMICOLON, "Expect ';' after loop condition.");
+    consume(parser, TOKEN_SEMICOLON, "Loop condition end liao, must put ';'.");
     if (parser->hadError) return NULL;
 
     Expr* increment = NULL;
@@ -319,7 +323,7 @@ static Stmt* forStatement(Parser* parser) {
         increment = expression(parser);
         if (parser->hadError) return NULL;
     }
-    consume(parser, TOKEN_RIGHT_PAREN, "Expect ')' after for clauses.");
+    consume(parser, TOKEN_RIGHT_PAREN, "After 'for' must have ')' leh!");
     if (parser->hadError) return NULL;
 
     Stmt* body = statement(parser);
@@ -346,27 +350,27 @@ static Stmt* forStatement(Parser* parser) {
 // returnStmt -> "return" expression? ";"
 static Stmt* returnStatement(Parser* parser) {
     Token keyword = previous(parser);
-    
+
     Expr* value = NULL;
     if (!check(parser, TOKEN_SEMICOLON)) {
         value = expression(parser);
         if (parser->hadError) return NULL;
     }
-    
-    consume(parser, TOKEN_SEMICOLON, "Expect ';' after return value.");
-    
+
+    consume(parser, TOKEN_SEMICOLON, "Aiyo return value means finish already, must end with ';'.");
+
     return newReturnStmt(keyword, value);
 }
 
 // ifStmt -> "if" "(" expression ")" statement ( "else" statement )?
 static Stmt* ifStatement(Parser* parser) {
-    Token leftParen = consume(parser, TOKEN_LEFT_PAREN, "Expect '(' after 'if'.");
+    Token leftParen = consume(parser, TOKEN_LEFT_PAREN, "After 'if' must have '(' leh!");
     if (parser->hadError || leftParen.type == TOKEN_ERROR)
         return NULL; // Error consuming left parenthesis
     Expr* condition = expression(parser);
     if (parser->hadError)
         return NULL; // Propagate error
-    Token rightParen = consume(parser, TOKEN_RIGHT_PAREN, "Expect ')' after if condition.");
+    Token rightParen = consume(parser, TOKEN_RIGHT_PAREN, "If condition finish liao, where your ')' ah?");
     if (parser->hadError || rightParen.type == TOKEN_ERROR)
         return NULL; // Error consuming right parenthesis
 
@@ -375,7 +379,7 @@ static Stmt* ifStatement(Parser* parser) {
         return NULL;
     }
     Stmt* elseBranch = NULL;
-    if (match(parser, TOKEN_ELSE)) {
+    if (match(parser, TOKEN_CANNOT)) {
         elseBranch = statement(parser);
         if (parser->hadError)
             return NULL;
@@ -388,18 +392,18 @@ static Stmt* ifStatement(Parser* parser) {
 static Stmt* printStatement(Parser* parser) {
     Expr* value = expression(parser); // Parse the expression to print
     if (parser->hadError) return NULL; // Propagate error
-    Token semicolon = consume(parser, TOKEN_SEMICOLON, "Expect ';' after print value.");
+    Token semicolon = consume(parser, TOKEN_SEMICOLON, "You print already never put ';'? How can?");
     if (semicolon.type == TOKEN_ERROR) return NULL; // Error consuming semicolon
     return newPrintStmt(value);
 }
 
 // whileStmt -> "while" "(" expression ")" statement ;
 static Stmt* whileStatement(Parser* parser) {
-    Token leftParen = consume(parser, TOKEN_LEFT_PAREN, "Expect '(' after 'while'.");
+    Token leftParen = consume(parser, TOKEN_LEFT_PAREN, "After 'while' must have '(' leh!");
     if (parser->hadError || leftParen.type == TOKEN_ERROR) return NULL; // Error consuming parenthesis
     Expr* condition = expression(parser);
     if (parser->hadError) return NULL;
-    Token rightParen = consume(parser, TOKEN_RIGHT_PAREN, "Expect ')' after condition.");
+    Token rightParen = consume(parser, TOKEN_RIGHT_PAREN, "Condition close with ')' leh, don't forget.");
     if (parser->hadError || rightParen.type == TOKEN_ERROR) return NULL; // Error consuming parenthesis
     Stmt* body = statement(parser);
     if (parser->hadError) return NULL;
@@ -411,14 +415,14 @@ static Stmt* whileStatement(Parser* parser) {
 static Stmt* expressionStatement(Parser* parser) {
     Expr* expr = expression(parser); // Parse the expression
     if (parser->hadError) return NULL; // Propagate error
-    Token semicolon = consume(parser, TOKEN_SEMICOLON, "Expect ';' after expression.");
+    Token semicolon = consume(parser, TOKEN_SEMICOLON, "Expression done liao, remember your ';'!");
     if (semicolon.type == TOKEN_ERROR) return NULL; // Error consuming semicolon
     return newExpressionStmt(expr);
 }
 
 // varDecl -> "var" IDENTIFIER ( "=" expression )
 static Stmt* varDeclaration(Parser* parser) {
-    Token name = consume(parser, TOKEN_IDENTIFIER, "Expect variable name.");
+    Token name = consume(parser, TOKEN_IDENTIFIER, "Eh hello, where the variable name?");
     if (name.type == TOKEN_ERROR) return NULL;
 
     Expr* initializer = NULL;
@@ -432,7 +436,7 @@ static Stmt* varDeclaration(Parser* parser) {
         }
     }
 
-    Token semicolon = consume(parser, TOKEN_SEMICOLON, "Expect ';' after variable declaration.");
+    Token semicolon = consume(parser, TOKEN_SEMICOLON, "After declare variable must have ';' leh.");
     if (semicolon.type == TOKEN_ERROR) {
         // If semicolon fails, we might have a valid initializer expression parsed
         freeExpr(initializer); // Clean up the parsed initializer
@@ -445,7 +449,7 @@ static Stmt* varDeclaration(Parser* parser) {
 static StmtList* block(Parser* parser) {
     // Consume the opening brace '{'
     if (!match(parser, TOKEN_LEFT_BRACE)) { // Should be checked before calling statement()
-        errorAtCurrent(parser, "Expected '{' to start block.");
+        errorAtCurrent(parser, "Wah, you never open with '{' ah? Cannot start block like this!");
         return NULL;
     }
 
@@ -476,7 +480,7 @@ static StmtList* block(Parser* parser) {
         }
     }
 
-    Token closingBrace = consume(parser, TOKEN_RIGHT_BRACE, "Expect '}' after block.");
+    Token closingBrace = consume(parser, TOKEN_RIGHT_BRACE, "After block must close with '}' ok?");
 
     // If we exited the loop due to an error OR failed to consume '}', cleanup & return NULL
     if (parser->hadError) { // Check error flag *after* trying to consume brace
@@ -572,7 +576,7 @@ static Expr* equality(Parser* parser) {
     if (parser->hadError) return NULL;
 
     while (match(parser, TOKEN_BANG_EQUAL) || match(parser, TOKEN_EQUAL_EQUAL)) {
-        Token operator = previous(parser);
+        Token operator= previous(parser);
         Expr* right = comparison(parser);
         if (parser->hadError) {
             freeExpr(expr);
@@ -588,9 +592,8 @@ static Expr* comparison(Parser* parser) {
     Expr* expr = term(parser);
     if (parser->hadError) return NULL;
 
-    while (match(parser, TOKEN_GREATER) || match(parser, TOKEN_GREATER_EQUAL) ||
-           match(parser, TOKEN_LESS) || match(parser, TOKEN_LESS_EQUAL)) {
-        Token operator = previous(parser);
+    while (match(parser, TOKEN_GREATER) || match(parser, TOKEN_GREATER_EQUAL) || match(parser, TOKEN_LESS) || match(parser, TOKEN_LESS_EQUAL)) {
+        Token operator= previous(parser);
         Expr* right = term(parser);
         if (parser->hadError) {
             freeExpr(expr);
@@ -607,7 +610,7 @@ static Expr* term(Parser* parser) {
     if (parser->hadError) return NULL;
 
     while (match(parser, TOKEN_MINUS) || match(parser, TOKEN_PLUS)) {
-        Token operator = previous(parser);
+        Token operator= previous(parser);
         Expr* right = factor(parser);
         if (parser->hadError) {
             freeExpr(expr);
@@ -624,7 +627,7 @@ static Expr* factor(Parser* parser) {
     if (parser->hadError) return NULL;
 
     while (match(parser, TOKEN_SLASH) || match(parser, TOKEN_STAR)) {
-        Token operator = previous(parser);
+        Token operator= previous(parser);
         Expr* right = unary(parser);
         if (parser->hadError) {
             freeExpr(expr);
@@ -638,7 +641,7 @@ static Expr* factor(Parser* parser) {
 // unary -> ( "!" | "-" ) unary | call ;
 static Expr* unary(Parser* parser) {
     if (match(parser, TOKEN_BANG) || match(parser, TOKEN_MINUS)) {
-        Token operator = previous(parser);
+        Token operator= previous(parser);
         Expr* right = unary(parser);
         if (parser->hadError) return NULL;
         return newUnaryExpr(operator, right);
@@ -650,7 +653,7 @@ static Expr* unary(Parser* parser) {
 static Expr* call(Parser* parser) {
     Expr* expr = primary(parser);
     if (parser->hadError) return NULL;
-    
+
     while (match(parser, TOKEN_LEFT_PAREN)) {
         expr = finishCall(parser, expr);
         if (parser->hadError) {
@@ -658,7 +661,7 @@ static Expr* call(Parser* parser) {
             return NULL;
         }
     }
-    
+
     return expr;
 }
 
@@ -704,7 +707,7 @@ static Expr* finishCall(Parser* parser, Expr* callee) {
         } while (match(parser, TOKEN_COMMA));
     }
 
-    Token paren = consume(parser, TOKEN_RIGHT_PAREN, "Expect ')' after arguments.");
+    Token paren = consume(parser, TOKEN_RIGHT_PAREN, "After argument list must have ')'.");
     if (parser->hadError) {
         for (int i = 0; i < arg_count; i++) {
             freeExpr(arguments[i]);
@@ -718,8 +721,8 @@ static Expr* finishCall(Parser* parser, Expr* callee) {
 
 // primary -> NUMBER | STRING | "true" | "false" | "nil" | IDENTIFIER | "(" expression ")" ;
 static Expr* primary(Parser* parser) {
-    if (match(parser, TOKEN_FALSE)) return newLiteralBooleanExpr(false);
-    if (match(parser, TOKEN_TRUE)) return newLiteralBooleanExpr(true);
+    if (match(parser, TOKEN_WRONG)) return newLiteralBooleanExpr(false);
+    if (match(parser, TOKEN_CORRECT)) return newLiteralBooleanExpr(true);
     if (match(parser, TOKEN_NIL)) return newLiteralNilExpr();
 
     if (match(parser, TOKEN_NUMBER)) {
@@ -750,7 +753,7 @@ static Expr* primary(Parser* parser) {
     if (match(parser, TOKEN_LEFT_PAREN)) {
         Expr* expr = expression(parser);
         if (parser->hadError) return NULL;
-        Token closingParen = consume(parser, TOKEN_RIGHT_PAREN, "Expect ')' after expression.");
+        Token closingParen = consume(parser, TOKEN_RIGHT_PAREN, "After expression must close with ')'.");
         if (closingParen.type == TOKEN_ERROR) {
             freeExpr(expr);
             return NULL;
@@ -759,6 +762,6 @@ static Expr* primary(Parser* parser) {
     }
 
     // If none of the above match, it's an error
-    errorAtCurrent(parser, "Expect expression.");
+    errorAtCurrent(parser, "Alamak! Expression where?");
     return NULL;
 }

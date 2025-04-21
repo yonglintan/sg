@@ -13,7 +13,7 @@
 static bool hadScanParseError = false;
 
 static void report(int line, const char* where, const char* message) {
-    fprintf(stderr, "[line %d] Error%s: %s\n", line, where ? where : "",
+    fprintf(stderr, "[line %d] Aiyo problem sia%s: %s\n", line, where ? where : "",
             message);
     hadScanParseError = true;
 }
@@ -41,7 +41,7 @@ int main(int argc, char* argv[]) {
 static void runFile(const char* path) {
     FILE* file = fopen(path, "rb");
     if (file == NULL) {
-        fprintf(stderr, "Could not open file \"%s\".\n", path);
+        fprintf(stderr, "Alamak, cannot open file \"%s\" sia.\n", path);
         exit(74); // EX_IOERR
     }
 
@@ -51,14 +51,14 @@ static void runFile(const char* path) {
 
     char* buffer = (char*)malloc(fileSize + 1);
     if (buffer == NULL) {
-        fprintf(stderr, "Not enough memory to read \"%s\".\n", path);
+        fprintf(stderr, "Wah, not enough memory to read \"%s\" leh.\n", path);
         fclose(file);
         exit(74); // EX_IOERR or EX_OSERR
     }
 
     size_t bytesRead = fread(buffer, sizeof(char), fileSize, file);
     if (bytesRead < fileSize && ferror(file)) {
-        fprintf(stderr, "Could not read file \"%s\".\n", path);
+        fprintf(stderr, "Aiyo, cannot read file \"%s\" lah.\n", path);
         free(buffer);
         fclose(file);
         exit(74); // EX_IOERR
@@ -110,7 +110,7 @@ static void run(const char* source) {
 
     // debugging
     if (statements == NULL) {
-        printf("Parser returned NULL (parse error or empty input).\n");
+        //printf("Parser returned NULL (parse error or empty input).\n");
         freeTokens(tokens, tokenCount);
         return;
     }

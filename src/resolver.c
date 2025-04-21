@@ -44,7 +44,7 @@ static void declare(Token name) {
     for (int i = 0; i < scopeStack->count; i++) {
         if (strncmp(scopeStack->entries[i].name, name.start, name.length) == 0 &&
             strlen(scopeStack->entries[i].name) == name.length) {
-            fprintf(stderr, "[line %d] Error: Variable already declared in this scope.\n", name.line);
+            fprintf(stderr, "[line %d] Aiyo problem sia: This variable already declare in this scope liao.\n", name.line);
             return;
         }
     }
@@ -54,7 +54,7 @@ static void declare(Token name) {
     }
     char* nameCopy = malloc(name.length + 1);
     if (nameCopy == NULL) {
-        fprintf(stderr, "Memory error: failed to allocate for name copy.\n");
+        fprintf(stderr, "Memory problem lah: Cannot allocate space for name copy sia.\n");
         exit(1);
     }
     memcpy(nameCopy, name.start, name.length);
@@ -170,7 +170,7 @@ static void resolveExpr(Interpreter* interpreter, Expr* expr) {
                     if (strncmp(scope->entries[i].name, expr->as.variable.name.start, expr->as.variable.name.length) == 0 &&
                         strlen(scope->entries[i].name) == expr->as.variable.name.length) {
                         if (!scope->entries[i].defined) {
-                            fprintf(stderr, "[line %d] Error: Can't read local variable in its own initializer.\n", expr->as.variable.name.line);
+                            fprintf(stderr, "[line %d] Aiyo problem sia: How to read local variable when initializing itself?\n", expr->as.variable.name.line);
                         }
                         return;
                     }

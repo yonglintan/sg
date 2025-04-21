@@ -11,7 +11,7 @@
 Obj* allocateObject(size_t size, ObjType type) {
     Obj* object = (Obj*)reallocate(NULL, 0, size);
     if (object == NULL) {
-        fprintf(stderr, "Fatal: Memory allocation failed for object!\n");
+        fprintf(stderr, "Aiyo die already lah: Memory allocation fail for the object sia...\n");
         exit(1);
     }
     object->type = type;
@@ -49,7 +49,7 @@ void printObject(Value value) {
             break;
         case OBJ_FUNCTION: {
             ObjFunction* function = AS_FUNCTION(value);
-            printf("<fn %.*s>", 
+            printf("<fn %.*s>",
                    function->declaration->as.function.name.length,
                    function->declaration->as.function.name.start);
             break;
@@ -63,7 +63,7 @@ void printObject(Value value) {
 void printValue(Value value) {
     switch (value.type) {
         case VAL_BOOL:
-            printf(AS_BOOL(value) ? "true" : "false");
+            printf(AS_BOOL(value) ? "correct" : "wrong");
             break;
         case VAL_NIL:
             printf("nil");
