@@ -145,6 +145,11 @@ static bool match(Parser* parser, TokenType type) {
 }
 
 static Token consume(Parser* parser, TokenType type, const char* message) {
+    // special case for semicolon to also accept 'lah' 
+    if (type == TOKEN_SEMICOLON && check(parser, TOKEN_LAH)) {
+        return advance(parser);
+    }
+
     // message = error message
     if (check(parser, type)) return advance(parser);
     errorAtCurrent(parser, message);
@@ -163,11 +168,11 @@ static void synchronize(Parser* parser) {
 
         switch (peek(parser).type) {
             case TOKEN_CLASS:
-            case TOKEN_FUN:
-            case TOKEN_VAR:
-            case TOKEN_FOR:
+            case TOKEN_HOWDO:
+            case TOKEN_GOT:
+            case TOKEN_DO_AGAIN_FROM:
             case TOKEN_IF:
-            case TOKEN_WHILE:
+            case TOKEN_KEEP_DOING:
             case TOKEN_PRINT:
             case TOKEN_RETURN:
                 return; // Start parsing from the next likely statement beginning
@@ -184,9 +189,9 @@ static void synchronize(Parser* parser) {
 // declaration -> funDecl | varDecl | statement
 static Stmt* declaration(Parser* parser) {
     Stmt* stmt = NULL;
-    if (match(parser, TOKEN_FUN)) {
+    if (match(parser, TOKEN_HOWDO)) {
         stmt = function(parser, "function");
-    } else if (match(parser, TOKEN_VAR)) {
+    } else if (match(parser, TOKEN_GOT)) {
         stmt = varDeclaration(parser);
     } else {
         stmt = statement(parser);
@@ -262,7 +267,7 @@ static Stmt* function(Parser* parser, const char* kind) {
 
 // statement -> exprStmt | ifStmt | printStmt | returnStmt | block
 static Stmt* statement(Parser* parser) {
-    if (match(parser, TOKEN_FOR)) {
+    if (match(parser, TOKEN_DO_AGAIN_FROM)) {
         return forStatement(parser);
     }
     if (match(parser, TOKEN_IF)) {
@@ -271,7 +276,7 @@ static Stmt* statement(Parser* parser) {
     if (match(parser, TOKEN_PRINT)) {
         return printStatement(parser);
     }
-    if (match(parser, TOKEN_WHILE)) {
+    if (match(parser, TOKEN_KEEP_DOING)) {
         return whileStatement(parser);
     }
     if (match(parser, TOKEN_RETURN)) {
@@ -298,7 +303,7 @@ static Stmt* forStatement(Parser* parser) {
     Stmt* initializer;
     if (match(parser, TOKEN_SEMICOLON)) {
         initializer = NULL;
-    } else if (match(parser, TOKEN_VAR)) {
+    } else if (match(parser, TOKEN_GOT)) {
         initializer = varDeclaration(parser);
         if (parser->hadError) return NULL;
     } else {
@@ -346,15 +351,15 @@ static Stmt* forStatement(Parser* parser) {
 // returnStmt -> "return" expression? ";"
 static Stmt* returnStatement(Parser* parser) {
     Token keyword = previous(parser);
-    
+
     Expr* value = NULL;
     if (!check(parser, TOKEN_SEMICOLON)) {
         value = expression(parser);
         if (parser->hadError) return NULL;
     }
-    
+
     consume(parser, TOKEN_SEMICOLON, "Expect ';' after return value.");
-    
+
     return newReturnStmt(keyword, value);
 }
 
@@ -375,7 +380,7 @@ static Stmt* ifStatement(Parser* parser) {
         return NULL;
     }
     Stmt* elseBranch = NULL;
-    if (match(parser, TOKEN_ELSE)) {
+    if (match(parser, TOKEN_IF_NOT)) {
         elseBranch = statement(parser);
         if (parser->hadError)
             return NULL;
@@ -572,7 +577,7 @@ static Expr* equality(Parser* parser) {
     if (parser->hadError) return NULL;
 
     while (match(parser, TOKEN_BANG_EQUAL) || match(parser, TOKEN_EQUAL_EQUAL)) {
-        Token operator = previous(parser);
+        Token operator= previous(parser);
         Expr* right = comparison(parser);
         if (parser->hadError) {
             freeExpr(expr);
@@ -588,9 +593,8 @@ static Expr* comparison(Parser* parser) {
     Expr* expr = term(parser);
     if (parser->hadError) return NULL;
 
-    while (match(parser, TOKEN_GREATER) || match(parser, TOKEN_GREATER_EQUAL) ||
-           match(parser, TOKEN_LESS) || match(parser, TOKEN_LESS_EQUAL)) {
-        Token operator = previous(parser);
+    while (match(parser, TOKEN_GREATER) || match(parser, TOKEN_GREATER_EQUAL) || match(parser, TOKEN_LESS) || match(parser, TOKEN_LESS_EQUAL)) {
+        Token operator= previous(parser);
         Expr* right = term(parser);
         if (parser->hadError) {
             freeExpr(expr);
@@ -607,7 +611,7 @@ static Expr* term(Parser* parser) {
     if (parser->hadError) return NULL;
 
     while (match(parser, TOKEN_MINUS) || match(parser, TOKEN_PLUS)) {
-        Token operator = previous(parser);
+        Token operator= previous(parser);
         Expr* right = factor(parser);
         if (parser->hadError) {
             freeExpr(expr);
@@ -624,7 +628,7 @@ static Expr* factor(Parser* parser) {
     if (parser->hadError) return NULL;
 
     while (match(parser, TOKEN_SLASH) || match(parser, TOKEN_STAR)) {
-        Token operator = previous(parser);
+        Token operator= previous(parser);
         Expr* right = unary(parser);
         if (parser->hadError) {
             freeExpr(expr);
@@ -638,7 +642,7 @@ static Expr* factor(Parser* parser) {
 // unary -> ( "!" | "-" ) unary | call ;
 static Expr* unary(Parser* parser) {
     if (match(parser, TOKEN_BANG) || match(parser, TOKEN_MINUS)) {
-        Token operator = previous(parser);
+        Token operator= previous(parser);
         Expr* right = unary(parser);
         if (parser->hadError) return NULL;
         return newUnaryExpr(operator, right);
@@ -650,7 +654,7 @@ static Expr* unary(Parser* parser) {
 static Expr* call(Parser* parser) {
     Expr* expr = primary(parser);
     if (parser->hadError) return NULL;
-    
+
     while (match(parser, TOKEN_LEFT_PAREN)) {
         expr = finishCall(parser, expr);
         if (parser->hadError) {
@@ -658,7 +662,7 @@ static Expr* call(Parser* parser) {
             return NULL;
         }
     }
-    
+
     return expr;
 }
 
