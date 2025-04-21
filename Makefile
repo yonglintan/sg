@@ -2,7 +2,7 @@ CC = gcc
 CFLAGS = -Wall -Wextra -std=c99 -I./
 SRCS = $(wildcard src/*.c)
 OBJS = $(patsubst src/%.c,build/%.o,$(SRCS))
-TARGET = build/sg
+TARGET = build/sing
 
 all: $(TARGET)
 
@@ -23,5 +23,23 @@ repl: $(TARGET)
 
 test: $(TARGET)
 	./test_sg.sh
+
+# Run a .sg file
+run:
+	@if [ -z "$(FILE)" ]; then \
+		echo "Usage: make run FILE=filename.sg [OUT=output.txt]"; \
+		exit 1; \
+	fi
+	@if [ ! -f "$(FILE)" ]; then \
+		echo "Error: File '$(FILE)' not found."; \
+		exit 1; \
+	fi
+	@echo "Running $(FILE)..."
+	@if [ -z "$(OUT)" ]; then \
+		$(TARGET) $(FILE); \
+	else \
+		$(TARGET) $(FILE) > $(OUT); \
+		echo "Output saved to $(OUT)"; \
+	fi
 
 .PHONY: all clean test repl
