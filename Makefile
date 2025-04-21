@@ -35,11 +35,5 @@ run:
 		exit 1; \
 	fi
 	@echo "Running $(FILE)..."
-	@if [ -z "$(OUT)" ]; then \
-		$(TARGET) $(FILE); \
-	else \
-		$(TARGET) $(FILE) > $(OUT); \
-		echo "Output saved to $(OUT)"; \
-	fi
-
+	$(TARGET) $(FILE)
 .PHONY: all clean test repl
