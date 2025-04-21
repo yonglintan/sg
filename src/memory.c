@@ -1,11 +1,11 @@
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "memory.h"
 
 // central function for all dynamic memory management.
 // note: oldSize still unused for now.
-void* reallocate(void* pointer, size_t oldSize, size_t newSize) {
+void* reallocate(void* pointer, size_t newSize) {
 
     if (newSize == 0) {
         // means we are freeing mem

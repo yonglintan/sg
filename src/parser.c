@@ -214,7 +214,7 @@ static Stmt* function(Parser* parser, const char* kind) {
     Token name = consume(parser, TOKEN_IDENTIFIER, message);
     if (parser->hadError) return NULL;
 
-    Token leftParen = consume(parser, TOKEN_LEFT_PAREN, "Aiyo, after function name must have '(' one lah!");
+    consume(parser, TOKEN_LEFT_PAREN, "Aiyo, after function name must have '(' one lah!");
     if (parser->hadError) return NULL;
 
     // Parse parameters
@@ -248,7 +248,7 @@ static Stmt* function(Parser* parser, const char* kind) {
         } while (match(parser, TOKEN_COMMA));
     }
 
-    Token rightParen = consume(parser, TOKEN_RIGHT_PAREN, "Aiyo, after parameters must close with ')' leh!");
+    consume(parser, TOKEN_RIGHT_PAREN, "Aiyo, after parameters must close with ')' leh!");
     if (parser->hadError) {
         free(parameters);
         return NULL;
@@ -480,7 +480,7 @@ static StmtList* block(Parser* parser) {
         }
     }
 
-    Token closingBrace = consume(parser, TOKEN_RIGHT_BRACE, "After block must close with '}' ok?");
+    consume(parser, TOKEN_RIGHT_BRACE, "After block must close with '}' ok?");
 
     // If we exited the loop due to an error OR failed to consume '}', cleanup & return NULL
     if (parser->hadError) { // Check error flag *after* trying to consume brace

@@ -110,6 +110,10 @@ void freeStmt(Stmt* stmt) {
                 freeExpr(stmt->as.return_stmt.value);
             }
             break;
+        case STMT_WHILE:
+            freeExpr(stmt->as.whileStmt.condition);
+            freeStmt(stmt->as.whileStmt.body);
+            break;
     }
 
     free(stmt);

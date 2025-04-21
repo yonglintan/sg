@@ -9,42 +9,42 @@ print (1 + 2) * 3; // Expected: 9
 
 // --- Unary Operators ---
 print "--- Unary ---";
-var u1 = 10;
+chope u1 = 10;
 print -u1;         // Expected: -10
-print !true;       // Expected: false
-print !false;      // Expected: true
-print !!nil;       // Expected: false (nil is falsey)
-print !!0;         // Expected: true (numbers are truthy)
-print !!"";        // Expected: true (strings are truthy, though printing "" might show error)
+print !correct;       // Expected: wrong
+print !wrong;      // Expected: correct
+print !!nil;       // Expected: wrong (nil is falsey)
+print !!0;         // Expected: correct (numbers are truthy)
+print !!"";        // Expected: correct (strings are truthy, though printing "" might show error)
 
 // --- Comparisons ---
 print "--- Comparisons ---";
-print 5 > 3;       // Expected: true
-print 5 < 3;       // Expected: false
-print 5 >= 5;      // Expected: true
-print 5 <= 4;      // Expected: false
+print 5 > 3;       // Expected: correct
+print 5 < 3;       // Expected: wrong
+print 5 >= 5;      // Expected: correct
+print 5 <= 4;      // Expected: wrong
 
 // --- Equality ---
 print "--- Equality ---";
-print 1 == 1;      // Expected: true
-print 1 != 2;      // Expected: true
-print nil == nil;    // Expected: true
-print true == true;  // Expected: true
-print false == false;// Expected: true
-print true == false; // Expected: false
-print 1 == true;   // Expected: false (different types)
-print nil == false;  // Expected: false
-print "hello" == "hello"; // Expected: true (string equality test)
-print "hello" == "world"; // Expected: false
-print "" == "";         // Expected: true
+print 1 == 1;      // Expected: correct
+print 1 != 2;      // Expected: correct
+print nil == nil;    // Expected: correct
+print correct == correct;  // Expected: correct
+print wrong == wrong;// Expected: correct
+print correct == wrong; // Expected: wrong
+print 1 == correct;   // Expected: wrong (different types)
+print nil == wrong;  // Expected: wrong
+print "hello" == "hello"; // Expected: correct (string equality test)
+print "hello" == "world"; // Expected: wrong
+print "" == "";         // Expected: correct
 
 // --- Variables and Assignment ---
 print "--- Variables ---";
-var a;
+chope a;
 print a;           // Expected: nil
 a = 1;
 print a;           // Expected: 1
-var b = 2;
+chope b = 2;
 print a + b;       // Expected: 3
 b = a = 99;        // Chained assignment
 print a;           // Expected: 99
@@ -52,19 +52,19 @@ print b;           // Expected: 99
 
 // --- Block Scope ---
 print "--- Scopes ---";
-var global = "outside";
+chope global = "outside";
 {
-  var local = "inside";
+  chope local = "inside";
   print local;
   print global;
   global = "changed inside";
 }
 print global;
 
-var shadow = 1;
+chope shadow = 1;
 {
   print shadow;   // Expected: 1
-  var shadow = 2;
+  chope shadow = 2;
   print shadow;   // Expected: 2
   {
     shadow = 3; // Assign to middle scope's shadow
@@ -74,4 +74,4 @@ var shadow = 1;
 }
 print shadow;     // Expected: 1 (global scope)
 
-print "--- Basic Tests Complete ---"; 
+print "--- Basic Tests Complete ---";

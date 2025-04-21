@@ -9,28 +9,26 @@
 
 // Macro to handle resizing arrays
 #define GROW_ARRAY(type, pointer, oldCount, newCount) \
-    (type*)reallocate(pointer, sizeof(type) * (oldCount), \
-                      sizeof(type) * (newCount))
+    (type*)reallocate(pointer, sizeof(type) * (newCount))
 
 // Macro to free an array
 #define FREE_ARRAY(type, pointer, oldCount) \
-    reallocate(pointer, sizeof(type) * (oldCount), 0)
+    reallocate(pointer, 0)
 
 // Main reallocation function (handles allocation, reallocation, freeing)
 // oldSize = 0, newSize > 0  => Allocate new block
 // oldSize > 0, newSize > 0  => Change allocation size
 // oldSize > 0, newSize = 0  => Free allocation
-void* reallocate(void* pointer, size_t oldSize, size_t newSize);
+void* reallocate(void* pointer, size_t newSize);
 
 // Convenience macros using reallocate
 #define ALLOCATE(type, count) \
-    (type*)reallocate(NULL, 0, sizeof(type) * (count))
+    (type*)reallocate(NULL, sizeof(type) * (count))
 
 #define FREE(type, pointer) \
-    reallocate(pointer, sizeof(type), 0)
+    reallocate(pointer, 0)
 
 #define REALLOCATE(type, pointer, old_count, new_count) \
-    (type*)reallocate(pointer, sizeof(type)*(old_count), sizeof(type)*(new_count))
+    (type*)reallocate(pointer, sizeof(type) * (new_count))
 
-
-#endif 
+#endif

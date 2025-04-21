@@ -1,15 +1,15 @@
 #include "object.h"
 
+#include "environment.h"
+#include "stmt.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "stmt.h"
-#include "environment.h"
 
 #include "memory.h"
 
 Obj* allocateObject(size_t size, ObjType type) {
-    Obj* object = (Obj*)reallocate(NULL, 0, size);
+    Obj* object = (Obj*)reallocate(NULL, size);
     if (object == NULL) {
         fprintf(stderr, "Aiyo die already lah: Memory allocation fail for the object sia...\n");
         exit(1);
@@ -27,8 +27,7 @@ ObjString* copyString(const char* chars, int length) {
     memcpy(heapChars, chars, length);
     heapChars[length] = '\0';
 
-    ObjString* string =
-        (ObjString*)allocateObject(sizeof(ObjString), OBJ_STRING);
+    ObjString* string = (ObjString*)allocateObject(sizeof(ObjString), OBJ_STRING);
 
     if (string == NULL) {
         // failed, just free
@@ -93,9 +92,7 @@ bool valuesEqual(Value a, Value b) {
                 ObjString* aString = AS_STRING(a);
                 ObjString* bString = AS_STRING(b);
                 // Compare length first for quick check, then content
-                return aString->length == bString->length &&
-                       memcmp(aString->chars, bString->chars,
-                              aString->length) == 0;
+                return aString->length == bString->length && memcmp(aString->chars, bString->chars, aString->length) == 0;
             }
             return false;
         }

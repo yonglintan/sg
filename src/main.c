@@ -7,16 +7,16 @@
 #include "interpreter.h"
 #include "object.h"
 #include "parser.h"
-#include "scanner.h"
 #include "resolver.h"
+#include "scanner.h"
 
 static bool hadScanParseError = false;
 
-static void report(int line, const char* where, const char* message) {
-    fprintf(stderr, "[line %d] Aiyo problem sia%s: %s\n", line, where ? where : "",
-            message);
-    hadScanParseError = true;
-}
+// static void report(int line, const char* where, const char* message) {
+//     fprintf(stderr, "[line %d] Aiyo problem sia%s: %s\n", line, where ? where : "",
+//             message);
+//     hadScanParseError = true;
+// }
 
 static void run(const char* source);
 static void runFile(const char* path);
@@ -110,7 +110,7 @@ static void run(const char* source) {
 
     // debugging
     if (statements == NULL) {
-        //printf("Parser returned NULL (parse error or empty input).\n");
+        // printf("Parser returned NULL (parse error or empty input).\n");
         freeTokens(tokens, tokenCount);
         return;
     }
