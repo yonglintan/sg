@@ -1,8 +1,8 @@
 
-// Variable declaration using "got"
-got name = "Singlish Programmer" lah
-got age = 25 lah
-got is_awesome = correct lah
+// Variable declaration using "chope"
+chope name = "Singlish Programmer" lah
+chope age = 25 lah
+chope is_awesome = correct lah
 
 // Print statements (without string + number concatenation)
 print "Hello, world!" lah
@@ -11,7 +11,7 @@ print age lah
 
 
 // While loops using "keep doing"
-got counter = 1 lah
+chope counter = 1 lah
 keep doing (counter <= 5) {
   print "Counter:" lah
   print counter lah
@@ -20,7 +20,7 @@ keep doing (counter <= 5) {
 
 // For loops using "do again from"
 print "For loop demonstration:" lah
-do again from (got i = 0 lah i < 3 lah i = i + 1) {
+do again from (chope i = 0 lah i < 3 lah i = i + 1) {
   print "Loop number" lah
   print i lah
 }
@@ -36,7 +36,7 @@ sayHello("Singapore") lah
 
 // Function with multiple parameters
 howdo addNumbers(a, b) {
-  got sum = a + b lah
+  chope sum = a + b lah
   return sum lah
 }
 

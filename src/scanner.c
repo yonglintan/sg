@@ -141,7 +141,6 @@ static TokenType identifierType(Scanner* scanner) {
     switch (scanner->start[0]) {
         case 'a':
             return checkKeyword(scanner, 1, 2, "nd", TOKEN_AND);
-        // case 'c': return checkKeyword(scanner, 1, 4, "lass", TOKEN_CLASS);
         case 'c':
             if (scanner->current - scanner->start > 1) {
                 switch (scanner->start[1]) {
@@ -155,8 +154,8 @@ static TokenType identifierType(Scanner* scanner) {
                         break;
                     case 'o':
                         return checkKeyword(scanner, 2, 5, "rrect", TOKEN_CORRECT);
-                        // case 'l':
-                        //     return checkKeyword(scanner, 2, 3, "ass", TOKEN_CLASS);
+                    case 'h':
+                        return checkKeyword(scanner, 2, 3, "ope", TOKEN_CHOPE);
                 }
             }
             break;
@@ -165,8 +164,6 @@ static TokenType identifierType(Scanner* scanner) {
         case 'f':
             if (scanner->current - scanner->start > 1) {
                 switch (scanner->start[1]) {
-                    // case 'w':
-                    //     return checkKeyword(scanner, 1, 4, "rong", TOKEN_WRONG);
                 }
             }
             break;
@@ -184,29 +181,12 @@ static TokenType identifierType(Scanner* scanner) {
             return checkKeyword(scanner, 1, 4, "rint", TOKEN_PRINT);
         case 'r':
             return checkKeyword(scanner, 1, 5, "eturn", TOKEN_RETURN);
-
         case 's':
             return checkKeyword(scanner, 1, 4, "uper", TOKEN_SUPER);
         case 't':
-            if (scanner->current - scanner->start > 1) {
-                switch (scanner->start[1]) {
-                    case 'h':
-                        return checkKeyword(scanner, 2, 2, "is", TOKEN_THIS);
-                        // case 'c':
-                        //     return checkKeyword(scanner, 1, 6, "orrect", TOKEN_CORRECT);
-                }
-            }
-            break;
-        case 'g':
-            return checkKeyword(scanner, 1, 2, "ot", TOKEN_GOT);
+            return checkKeyword(scanner, 1, 3, "his", TOKEN_THIS);
         case 'w':
-            if (scanner->current - scanner->start > 1) {
-                switch (scanner->start[1]) {
-                    case 'r':
-                        return checkKeyword(scanner, 2, 3, "ong", TOKEN_WRONG);
-                }
-            }
-            break;
+            return checkKeyword(scanner, 1, 4, "rong", TOKEN_WRONG);
     }
 
     return TOKEN_IDENTIFIER;
@@ -434,8 +414,8 @@ void printToken(Token token) {
         case TOKEN_CORRECT:
             printf("CORRECT");
             break;
-        case TOKEN_GOT:
-            printf("GOT");
+        case TOKEN_CHOPE:
+            printf("CHOPE");
             break;
         case TOKEN_KEEP_DOING:
             printf("KEEP DOING");

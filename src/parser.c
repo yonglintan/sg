@@ -153,7 +153,7 @@ static Token consume(Parser* parser, TokenType type, const char* message) {
     if (check(parser, type)) return advance(parser);
     errorAtCurrent(parser, message);
 
-    // can either return an error token or handle differently? 
+    // can either return an error token or handle differently?
     // For now, return previous potentially? idk
     return peek(parser);
 }
@@ -168,7 +168,7 @@ static void synchronize(Parser* parser) {
         switch (peek(parser).type) {
             case TOKEN_CLASS:
             case TOKEN_HOWDO:
-            case TOKEN_GOT:
+            case TOKEN_CHOPE:
             case TOKEN_DO_AGAIN_FROM:
             case TOKEN_CAN:
             case TOKEN_KEEP_DOING:
@@ -190,7 +190,7 @@ static Stmt* declaration(Parser* parser) {
     Stmt* stmt = NULL;
     if (match(parser, TOKEN_HOWDO)) {
         stmt = function(parser, "howdo");
-    } else if (match(parser, TOKEN_GOT)) {
+    } else if (match(parser, TOKEN_CHOPE)) {
         stmt = varDeclaration(parser);
     } else {
         stmt = statement(parser);
@@ -207,7 +207,7 @@ static Stmt* declaration(Parser* parser) {
     return stmt;
 }
 
-// function ->  "(" parameters? ")" 
+// function ->  "(" parameters? ")"
 static Stmt* function(Parser* parser, const char* kind) {
     char message[64];
     snprintf(message, sizeof(message), "Expect %s name.", kind);
@@ -302,7 +302,7 @@ static Stmt* forStatement(Parser* parser) {
     Stmt* initializer;
     if (match(parser, TOKEN_SEMICOLON)) {
         initializer = NULL;
-    } else if (match(parser, TOKEN_GOT)) {
+    } else if (match(parser, TOKEN_CHOPE)) {
         initializer = varDeclaration(parser);
         if (parser->hadError) return NULL;
     } else {
@@ -350,15 +350,15 @@ static Stmt* forStatement(Parser* parser) {
 // returnStmt -> "return" expression? ";"
 static Stmt* returnStatement(Parser* parser) {
     Token keyword = previous(parser);
-    
+
     Expr* value = NULL;
     if (!check(parser, TOKEN_SEMICOLON)) {
         value = expression(parser);
         if (parser->hadError) return NULL;
     }
-    
+
     consume(parser, TOKEN_SEMICOLON, "Expect ';' after return value.");
-    
+
     return newReturnStmt(keyword, value);
 }
 
@@ -576,7 +576,7 @@ static Expr* equality(Parser* parser) {
     if (parser->hadError) return NULL;
 
     while (match(parser, TOKEN_BANG_EQUAL) || match(parser, TOKEN_EQUAL_EQUAL)) {
-        Token operator = previous(parser);
+        Token operator= previous(parser);
         Expr* right = comparison(parser);
         if (parser->hadError) {
             freeExpr(expr);
@@ -592,9 +592,8 @@ static Expr* comparison(Parser* parser) {
     Expr* expr = term(parser);
     if (parser->hadError) return NULL;
 
-    while (match(parser, TOKEN_GREATER) || match(parser, TOKEN_GREATER_EQUAL) ||
-           match(parser, TOKEN_LESS) || match(parser, TOKEN_LESS_EQUAL)) {
-        Token operator = previous(parser);
+    while (match(parser, TOKEN_GREATER) || match(parser, TOKEN_GREATER_EQUAL) || match(parser, TOKEN_LESS) || match(parser, TOKEN_LESS_EQUAL)) {
+        Token operator= previous(parser);
         Expr* right = term(parser);
         if (parser->hadError) {
             freeExpr(expr);
@@ -611,7 +610,7 @@ static Expr* term(Parser* parser) {
     if (parser->hadError) return NULL;
 
     while (match(parser, TOKEN_MINUS) || match(parser, TOKEN_PLUS)) {
-        Token operator = previous(parser);
+        Token operator= previous(parser);
         Expr* right = factor(parser);
         if (parser->hadError) {
             freeExpr(expr);
@@ -628,7 +627,7 @@ static Expr* factor(Parser* parser) {
     if (parser->hadError) return NULL;
 
     while (match(parser, TOKEN_SLASH) || match(parser, TOKEN_STAR)) {
-        Token operator = previous(parser);
+        Token operator= previous(parser);
         Expr* right = unary(parser);
         if (parser->hadError) {
             freeExpr(expr);
@@ -642,7 +641,7 @@ static Expr* factor(Parser* parser) {
 // unary -> ( "!" | "-" ) unary | call ;
 static Expr* unary(Parser* parser) {
     if (match(parser, TOKEN_BANG) || match(parser, TOKEN_MINUS)) {
-        Token operator = previous(parser);
+        Token operator= previous(parser);
         Expr* right = unary(parser);
         if (parser->hadError) return NULL;
         return newUnaryExpr(operator, right);
@@ -654,7 +653,7 @@ static Expr* unary(Parser* parser) {
 static Expr* call(Parser* parser) {
     Expr* expr = primary(parser);
     if (parser->hadError) return NULL;
-    
+
     while (match(parser, TOKEN_LEFT_PAREN)) {
         expr = finishCall(parser, expr);
         if (parser->hadError) {
@@ -662,7 +661,7 @@ static Expr* call(Parser* parser) {
             return NULL;
         }
     }
-    
+
     return expr;
 }
 
