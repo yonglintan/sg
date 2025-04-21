@@ -1,0 +1,85 @@
+//  tower of hanoi in Sing
+
+howdo printMove(disk, source, destination) {
+  // Clearly state the move
+  print "Moving disk " lah
+  print disk lah
+  print "from peg " lah
+  print source lah
+  print "to peg " lah
+  print destination lah
+  print "" lah
+  
+  // Show disk size for clarity
+  can (disk == 1) {
+    print "Disk:  *    (smallest)" lah
+  } cannot can (disk == 2) {
+    print "Disk: ***   (medium)" lah
+  } cannot {
+    print "Disk: *****  (largest)" lah
+  }
+  
+  // Simplified tower visualization
+  print "Pegs:   A     B     C" lah
+  // Indicate source peg
+  can (source == "A") {
+    print "From:   ^" lah
+  } cannot can (source == "B") {
+    print "From:         ^" lah
+  } cannot {
+    print "From:               ^" lah
+  }
+  // Indicate destination peg
+  can (destination == "A") {
+    print "To:     -->" lah
+  } cannot can (destination == "B") {
+    print "To:           -->" lah
+  } cannot {
+    print "To:                 -->" lah
+  }
+  
+  print "=================" lah
+  print "" lah
+}
+
+howdo hanoi(n, source, auxiliary, destination) {
+  // Base case: move one disk
+  can (n == 1) {
+    printMove(1, source, destination) lah
+    return nil lah
+  }
+  
+  // Move n-1 disks from source to auxiliary
+  hanoi(n-1, source, destination, auxiliary) lah
+  
+  // Move largest disk to destination
+  printMove(n, source, destination) lah
+  
+  // Move n-1 disks from auxiliary to destination
+  hanoi(n-1, auxiliary, source, destination) lah
+}
+
+// Initial state (smallest on top)
+print "Tower of Hanoi - Initial State:" lah
+print "Disks on Peg A (top to bottom):" lah
+print "  *    (smallest)" lah
+print " ***   (medium)" lah
+print "*****  (largest)" lah
+print "Pegs:   A     B     C" lah
+print "        ^" lah
+print "=================" lah
+print "" lah
+
+// Solve for 3 disks, standard A to C
+print "Solving Tower of Hanoi with 3 disks:" lah
+hanoi(3, "A", "B", "C") lah
+
+// Final state (smallest on top)
+print "Tower of Hanoi - Final State:" lah
+print "Disks on Peg C (top to bottom):" lah
+print "  *    (smallest)" lah
+print " ***   (medium)" lah
+print "*****  (largest)" lah
+print "Pegs:   A     B     C" lah
+print "                    ^" lah
+print "=================" lah
